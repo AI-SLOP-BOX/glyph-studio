@@ -1,0 +1,32 @@
+[package]
+name = "glyph-studio"
+version = "0.1.0"
+edition = "2021"
+description = "A font creation tool built with Rust and egui"
+
+[dependencies]
+eframe = { version = "0.31", features = ["default", "persistence"] }
+egui = "0.31"
+egui_extras = { version = "0.31", features = ["image", "svg"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp"] }
+kurbo = "0.11"
+kurbo08 = { package = "kurbo", version = "0.8.3" }
+i_curve = "0.1.2"
+svgtypes = "0.16"
+norad = { version = "0.8", features = ["rayon"] }
+write-fonts = "0.52"
+read-fonts = "0.43.3"
+skrifa = "0.27"
+rfd = "0.15"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+plist = "1"
+log = "0.4"
+env_logger = "0.11"
+flate2 = "1"
+oxifont-webfont = { version = "0.2.2", features = ["woff2"] }
+chrono = "0.4"
+font-types = "0.12.4"
+fonttools = "0.1.0"
+otspec = "0.1.0"
+ttf-parser = "0.25"
