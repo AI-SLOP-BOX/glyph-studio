@@ -1,6 +1,10 @@
 # Glyph Studio
 
+[![CI](https://github.com/AI-SLOP-BOX/glyph-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/AI-SLOP-BOX/glyph-studio/actions/workflows/ci.yml)
+
 Rust／egui製のフォント制作アプリです。輪郭、ノード、コンポーネント、マスター、カーニング、OpenType機能を編集できます。
+
+現在は **v0.1.0 MVP** です。GlyphsやFontLabの完全互換を目指すのではなく、個人の普段のフォント制作に必要な導線を、無料・OSSのGUIとCLIで気持ちよくつなぐことを目標にしています。対応範囲と既知の制限は [MVP.md](MVP.md) にまとめています。
 
 GUI・CLI・再利用可能なCore APIを同じRustコードで提供します。push／Pull Request時にはテスト、Clippy、Rustdocを自動検証します。
 
