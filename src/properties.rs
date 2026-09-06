@@ -3198,144 +3198,17 @@ pub fn show_properties(
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        ensure_mark_class_for_glyph, insert_feature_operation, normalize_mark_class,
-        remove_color_palette_entry, split_feature_file_source,
-    };
-    use crate::font_data::{
-        ColorGradient, ColorGradientKind, ColorGradientStop, ColorLayer, ColorLayerTransform,
-        FontProject, GlyphAnchor, GlyphData,
-    };
-
-    #[test]
-    fn mark_class_input_is_normalized_once() {
-        assert_eq!(normalize_mark_class("top"), "@top");
-        assert_eq!(normalize_mark_class(" @top "), "@top");
-    }
-
-    #[test]
-    fn feature_file_source_separates_class_declarations_from_features() {
-        let source = "@Upper = [A B];\n\nfeature liga { sub f i by fi; } liga;\n";
-        let (classes, features) = split_feature_file_source(source);
-        assert_eq!(classes, "@Upper = [A B];");
-        assert_eq!(features, "\n\nfeature liga { sub f i by fi; } liga;\n");
-    }
-
-    #[test]
-    fn mark_class_can_be_generated_from_a_mark_anchor() {
-        let mut project = FontProject::new();
-        let mut glyph = GlyphData::new("acute".to_string(), Some(0x00B4));
-        glyph.anchors.push(GlyphAnchor {
-            name: "_top".to_string(),
-            x: 12.4,
-            y: 503.6,
-        });
-        project.glyphs.insert(glyph.name.clone(), glyph);
-
-        assert_eq!(
-            ensure_mark_class_for_glyph(&mut project, "acute"),
-            Some("@top".to_string())
-        );
-        assert!(project
-            .opentype_features
-            .contains("markClass acute <anchor 12 504> @top;"));
-    }
-
-    #[test]
-    fn removing_palette_color_updates_layer_and_gradient_references() {
-        let mut project = FontProject::new();
-        project.color_palettes = vec![vec![[255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255]]];
-        project.color_layers.insert(
-            "A".into(),
-            vec![ColorLayer {
-                glyph: "A.red".into(),
-                palette_index: 2,
-                gradient: Some(ColorGradient {
-                    start_palette_index: 2,
-                    end_palette_index: 1,
-                    kind: ColorGradientKind::Linear,
-                    extend: Default::default(),
-                    x0: 0.0,
-                    y0: 0.0,
-                    x1: 100.0,
-                    y1: 0.0,
-                    x2: 0.0,
-                    y2: 100.0,
-                    stops: vec![
-                        ColorGradientStop {
-                            offset: 0.0,
-                            palette_index: 2,
-                            alpha: 1.0,
-                        },
-                        ColorGradientStop {
-                            offset: 1.0,
-                            palette_index: 1,
-                            alpha: 1.0,
-                        },
-                    ],
-                    radius0: 0.0,
-                    radius1: 0.0,
-                    start_angle: 0.0,
-                    end_angle: 360.0,
-                }),
-                alpha: 1.0,
-            }],
-        );
-        project.color_layer_transforms.insert(
-            "A".into(),
-            vec![Some(ColorLayerTransform {
-                dx: 10.0,
-                ..ColorLayerTransform::default()
-            })],
-        );
-
-        remove_color_palette_entry(&mut project, 1);
-
-        assert_eq!(project.color_palettes[0].len(), 2);
-        let layer = &project.color_layers["A"][0];
-        assert_eq!(layer.palette_index, 1);
-        let gradient = layer.gradient.as_ref().unwrap();
-        assert_eq!(gradient.start_palette_index, 1);
-        assert_eq!(gradient.end_palette_index, 0);
-        assert_eq!(gradient.stops.len(), 1);
-        assert_eq!(gradient.stops[0].palette_index, 1);
-        assert_eq!(project.color_layer_transforms["A"][0].unwrap().dx, 10.0);
-    }
-
-    #[test]
-    fn operation_is_inserted_inside_feature_block() {
-        let mut source = "feature liga {\n    sub f i by fi;\n} liga;\n".to_string();
-        insert_feature_operation(&mut source, "liga", "    sub s t by st;\n");
-        assert_eq!(
-            source,
-            "feature liga {\n    sub f i by fi;\n    sub s t by st;\n} liga;\n"
-        );
-    }
-
-    #[test]
-    fn operation_is_appended_when_no_block_exists() {
-        let mut source = String::new();
-        insert_feature_operation(&mut source, "kern", "    pos A V <0 0 -80 0>;\n");
-        assert_eq!(
-            source,
-            "feature kern {\n    pos A V <0 0 -80 0>;\n} kern;\n"
-        );
-    }
-
-    #[test]
-    fn tag_matching_does_not_use_a_similar_feature_name() {
-        let mut source = "feature ligature {\n    sub f i by fi;\n} ligature;\n".to_string();
-        insert_feature_operation(&mut source, "liga", "    sub s t by st;\n");
-        assert!(source.contains("feature liga {\n    sub s t by st;\n}"));
-        assert!(source.contains("feature ligature {\n    sub f i by fi;"));
-    }
-
-    #[test]
-    fn operation_is_inserted_after_nested_lookup_block() {
-        let mut source =
-            "feature liga {\n    lookup L {\n        sub f i by fi;\n    } L;\n} liga;\n"
-                .to_string();
-        insert_feature_operation(&mut source, "liga", "    sub s t by st;\n");
-        assert!(source.contains("} L;\n    sub s t by st;\n} liga;"));
-    }
+    use super::*;
+    include!("properties_tests/000_mark_class_input_is_normalized_once.rs");
+    include!(
+        "properties_tests/001_feature_file_source_separates_class_declarations_from_features.rs"
+    );
+    include!("properties_tests/002_mark_class_can_be_generated_from_a_mark_anchor.rs");
+    include!(
+        "properties_tests/003_removing_palette_color_updates_layer_and_gradient_references.rs"
+    );
+    include!("properties_tests/004_operation_is_inserted_inside_feature_block.rs");
+    include!("properties_tests/005_operation_is_appended_when_no_block_exists.rs");
+    include!("properties_tests/006_tag_matching_does_not_use_a_similar_feature_name.rs");
+    include!("properties_tests/007_operation_is_inserted_after_nested_lookup_block.rs");
 }
