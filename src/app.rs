@@ -139,7 +139,7 @@ pub enum AnchorTarget {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum NodeAction {
+pub(crate) enum NodeAction {
     Smooth,
     Corner,
     ToggleCurve,
