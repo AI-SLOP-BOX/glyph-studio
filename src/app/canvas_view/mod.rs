@@ -3,3 +3,4 @@ mod canvas_01_show_glyph_canvas;
 mod canvas_02_fit_current_glyph_to_canvas;
 mod canvas_03_decompose_current_components;
 mod canvas_04_decompose_named_components;
+mod canvas_header;
