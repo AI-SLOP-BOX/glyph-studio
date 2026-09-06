@@ -422,7 +422,14 @@ mod preview;
 use preview::*;
 mod canvas_view;
 mod document;
+mod glyph_panel;
+mod kerning_window;
+mod keyboard;
 mod panels;
+mod preview_panel;
+mod properties_panel;
+mod shortcuts_window;
 #[cfg(test)]
 mod tests;
+mod validation_window;
 mod view;
