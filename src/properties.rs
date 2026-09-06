@@ -153,7 +153,6 @@ fn remove_color_palette_entry(project: &mut FontProject, index: usize) {
 
 #[path = "properties_guides.rs"]
 mod properties_guides;
-#[allow(clippy::too_many_arguments)]
 #[path = "properties_master.rs"]
 mod properties_master;
 
@@ -172,6 +171,7 @@ mod properties_opentype;
 #[path = "properties_alternate.rs"]
 mod properties_alternate;
 
+#[allow(clippy::too_many_arguments)]
 pub fn show_properties(
     ui: &mut Ui,
     properties_filter: &mut String,
@@ -223,12 +223,6 @@ pub fn show_properties(
         }
     });
     let filter = properties_filter.trim().to_lowercase();
-    let show_section = |keywords: &[&str]| {
-        filter.is_empty()
-            || keywords
-                .iter()
-                .any(|keyword| filter.contains(&keyword.to_lowercase()))
-    };
     ui.separator();
     properties_font::show(ui, &filter, project);
 
@@ -536,6 +530,7 @@ pub fn show_properties(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::font_data::*;
     include!("properties_tests/000_mark_class_input_is_normalized_once.rs");
     include!(
         "properties_tests/001_feature_file_source_separates_class_declarations_from_features.rs"

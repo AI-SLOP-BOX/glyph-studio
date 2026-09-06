@@ -16,6 +16,7 @@ jobs:
       - name: Install HarfBuzz tools
         run: sudo apt-get update && sudo apt-get install -y libharfbuzz-bin
       - run: cargo fmt --all -- --check
+      - run: ./scripts/check-source-limits.sh
       - run: cargo test --all-targets --all-features
       - run: cargo clippy --all-targets --all-features -- -D warnings
       - run: cargo doc --no-deps --all-features

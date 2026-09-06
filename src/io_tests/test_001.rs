@@ -12,3 +12,4 @@
         assert_eq!(loaded.metadata.x_height, 0.0);
         assert_eq!(loaded.metadata.cap_height, 0.0);
         std::fs::remove_file(path).unwrap();
+    }

@@ -1,4 +1,4 @@
-
+#[rustfmt::skip]
 fn build_simple_gsub_with_variations_and_unicode(
     source: &str,
     glyph_ids: &std::collections::HashMap<&str, u16>,
@@ -15,10 +15,7 @@ fn build_simple_gsub_with_variations_and_unicode(
         .collect::<BTreeMap<_, _>>();
     let mark_sets = parse_mark_glyph_sets(&source, glyph_ids);
     let feature_blocks = raw_feature_blocks.clone();
-    let mut feature_tags = feature_blocks
-        .iter()
-        .map(|(tag, _)| *tag)
-        .collect::<Vec<_>>();
+    let mut feature_tags = feature_blocks.iter().map(|(tag, _)| *tag).collect::<Vec<_>>();
     feature_tags.sort_by_key(|tag| tag.to_be_bytes());
     feature_tags.dedup();
     if !conditional_substitutions.is_empty() {
@@ -34,23 +31,13 @@ fn build_simple_gsub_with_variations_and_unicode(
     } else {
         feature_blocks
     };
-    let lookup_flags = rule_sources
-        .iter()
-        .map(|(tag, block)| (*tag, parse_lookup_flags(block)))
-        .collect::<BTreeMap<_, _>>();
+    let lookup_flags = rule_sources.iter().map(|(tag, block)| (*tag, parse_lookup_flags(block))).collect::<BTreeMap<_, _>>();
     let mut rules = GsubRuleSet::default();
     for substitution in conditional_substitutions {
-        let (Some(&base), Some(&alternate)) = (
-            glyph_ids.get(substitution.base.as_str()),
-            glyph_ids.get(substitution.alternate.as_str()),
-        ) else {
+        let (Some(&base), Some(&alternate)) = (glyph_ids.get(substitution.base.as_str()), glyph_ids.get(substitution.alternate.as_str())) else {
             continue;
         };
-        rules.substitutions.push((
-            Tag::new(b"rvrn"),
-            GlyphId16::new(base),
-            GlyphId16::new(alternate),
-        ));
+        rules.substitutions.push((Tag::new(b"rvrn"), GlyphId16::new(base), GlyphId16::new(alternate)));
     }
     for (rule_tag, rule_source) in rule_sources {
         for statement in rule_source.split(';') {
@@ -66,9 +53,7 @@ fn build_simple_gsub_with_variations_and_unicode(
                 let Some(by_index) = reverse_tokens.iter().position(|token| *token == "by") else {
                     continue;
                 };
-                let Some((groups, target_index)) =
-                    parse_feature_groups(&reverse_tokens[..by_index], glyph_ids)
-                else {
+                let Some((groups, target_index)) = parse_feature_groups(&reverse_tokens[..by_index], glyph_ids) else {
                     continue;
                 };
                 let replacement = clean_feature_class(&reverse_tokens[by_index + 1..])
@@ -85,9 +70,7 @@ fn build_simple_gsub_with_variations_and_unicode(
                 let target = targets.clone();
                 let backtrack = groups[..target_index].iter().rev().cloned().collect();
                 let lookahead = groups[target_index + 1..].to_vec();
-                rules
-                    .reverse_contexts
-                    .push((rule_tag, target, backtrack, lookahead, replacement));
+                rules.reverse_contexts.push((rule_tag, target, backtrack, lookahead, replacement));
                 continue;
             }
             let alternate_tokens = tokens
@@ -101,17 +84,11 @@ fn build_simple_gsub_with_variations_and_unicode(
                 };
                 let names = tokens[3..].join(" ");
                 let names = names.trim_start_matches('[').trim_end_matches(']');
-                let Some(alts) = names
-                    .split_whitespace()
-                    .map(|name| glyph_ids.get(name).copied().map(GlyphId16::new))
-                    .collect::<Option<Vec<_>>>()
-                else {
+                let Some(alts) = names.split_whitespace().map(|name| glyph_ids.get(name).copied().map(GlyphId16::new)).collect::<Option<Vec<_>>>() else {
                     continue;
                 };
                 if !alts.is_empty() {
-                    rules
-                        .alternates
-                        .push((rule_tag, GlyphId16::new(target_id), alts));
+                    rules.alternates.push((rule_tag, GlyphId16::new(target_id), alts));
                 }
                 continue;
             }
@@ -122,15 +99,8 @@ fn build_simple_gsub_with_variations_and_unicode(
                     let to = clean_feature_class(&sub_tokens[by_index + 1..]);
                     if from.len() > 1 && from.len() == to.len() {
                         for (source, replacement) in from.into_iter().zip(to) {
-                            if let (Some(&source_id), Some(&replacement_id)) = (
-                                glyph_ids.get(source.as_str()),
-                                glyph_ids.get(replacement.as_str()),
-                            ) {
-                                rules.substitutions.push((
-                                    rule_tag,
-                                    GlyphId16::new(source_id),
-                                    GlyphId16::new(replacement_id),
-                                ));
+                            if let (Some(&source_id), Some(&replacement_id)) = (glyph_ids.get(source.as_str()), glyph_ids.get(replacement.as_str())) {
+                                rules.substitutions.push((rule_tag, GlyphId16::new(source_id), GlyphId16::new(replacement_id)));
                             }
                         }
                         continue;
@@ -160,13 +130,9 @@ fn build_simple_gsub_with_variations_and_unicode(
                             let replacement = if replacement_ids.len() == 1 {
                                 replacement_ids[0]
                             } else {
-                                *replacement_ids
-                                    .get(target_choice)
-                                    .unwrap_or(&replacement_ids[0])
+                                *replacement_ids.get(target_choice).unwrap_or(&replacement_ids[0])
                             };
-                            rules
-                                .contexts
-                                .push((rule_tag, sequence, target_index, replacement));
+                            rules.contexts.push((rule_tag, sequence, target_index, replacement));
                         }
                         if !parsed.is_empty() {
                             continue;
@@ -177,14 +143,8 @@ fn build_simple_gsub_with_variations_and_unicode(
                 let Some(&first) = glyph_ids.get(first_name) else {
                     continue;
                 };
-                if by_index == 2
-                    && sub_tokens[by_index + 1..].iter().all(|name| {
-                        name.trim_matches(|character: char| "[]".contains(character)) == "NULL"
-                    })
-                {
-                    rules
-                        .multiples
-                        .push((rule_tag, GlyphId16::new(first), Vec::new()));
+                if by_index == 2 && sub_tokens[by_index + 1..].iter().all(|name| name.trim_matches(|character: char| "[]".contains(character)) == "NULL") {
+                    rules.multiples.push((rule_tag, GlyphId16::new(first), Vec::new()));
                     continue;
                 }
                 let Some(replacements) = sub_tokens[by_index + 1..]
@@ -198,9 +158,7 @@ fn build_simple_gsub_with_variations_and_unicode(
                     continue;
                 };
                 if by_index == 2 && replacements.len() > 1 {
-                    rules
-                        .multiples
-                        .push((rule_tag, GlyphId16::new(first), replacements));
+                    rules.multiples.push((rule_tag, GlyphId16::new(first), replacements));
                     continue;
                 }
                 let Some(replacement) = replacements.first().copied() else {
@@ -217,14 +175,10 @@ fn build_simple_gsub_with_variations_and_unicode(
                     continue;
                 };
                 if components.is_empty() {
-                    rules
-                        .substitutions
-                        .push((rule_tag, GlyphId16::new(first), replacement));
+                    rules.substitutions.push((rule_tag, GlyphId16::new(first), replacement));
                     continue;
                 }
-                rules
-                    .ligatures
-                    .push((rule_tag, GlyphId16::new(first), components, replacement));
+                rules.ligatures.push((rule_tag, GlyphId16::new(first), components, replacement));
                 continue;
             }
             for window in tokens.windows(4) {
@@ -235,11 +189,7 @@ fn build_simple_gsub_with_variations_and_unicode(
                     let Some(&replacement_id) = glyph_ids.get(window[3]) else {
                         continue;
                     };
-                    rules.substitutions.push((
-                        rule_tag,
-                        GlyphId16::new(target_id),
-                        GlyphId16::new(replacement_id),
-                    ));
+                    rules.substitutions.push((rule_tag, GlyphId16::new(target_id), GlyphId16::new(replacement_id)));
                 }
             }
         }
@@ -280,127 +230,63 @@ fn build_simple_gsub_with_variations_and_unicode(
     {
         return None;
     }
-    rules
-        .substitutions
-        .sort_by_key(|(_, target, _)| target.to_u16());
-    rules
-        .ligatures
-        .sort_by_key(|(_, target, _, _)| target.to_u16());
+    rules.substitutions.sort_by_key(|(_, target, _)| target.to_u16());
+    rules.ligatures.sort_by_key(|(_, target, _, _)| target.to_u16());
     let mut lookups = Vec::new();
     let mut feature_indices_by_tag = BTreeMap::<Tag, Vec<u16>>::new();
     for tag in &feature_tags {
-        let lookup_flag = lookup_flags
-            .get(tag)
-            .copied()
-            .unwrap_or_else(layout::LookupFlag::empty);
-        let substitutions = rules
-            .substitutions
-            .iter()
-            .filter(|(rule_tag, _, _)| rule_tag == tag)
-            .collect::<Vec<_>>();
+        let lookup_flag = lookup_flags.get(tag).copied().unwrap_or_else(layout::LookupFlag::empty);
+        let substitutions = rules.substitutions.iter().filter(|(rule_tag, _, _)| rule_tag == tag).collect::<Vec<_>>();
         if substitutions.is_empty() {
             continue;
         }
         let lookup = layout::Lookup::new(
             lookup_flag,
             vec![gsub::SingleSubst::format_2(
-                rules
-                    .substitutions
-                    .iter()
-                    .filter(|(rule_tag, _, _)| rule_tag == tag)
-                    .map(|(_, target, _)| *target)
-                    .collect(),
-                rules
-                    .substitutions
-                    .iter()
-                    .filter(|(rule_tag, _, _)| rule_tag == tag)
-                    .map(|(_, _, replacement)| *replacement)
-                    .collect(),
+                rules.substitutions.iter().filter(|(rule_tag, _, _)| rule_tag == tag).map(|(_, target, _)| *target).collect(),
+                rules.substitutions.iter().filter(|(rule_tag, _, _)| rule_tag == tag).map(|(_, _, replacement)| *replacement).collect(),
             )],
         );
         let lookup = apply_lookup_mark_set(lookup, *tag, &lookup_mark_sets, &mark_sets);
-        feature_indices_by_tag
-            .entry(*tag)
-            .or_default()
-            .push(lookups.len() as u16);
+        feature_indices_by_tag.entry(*tag).or_default().push(lookups.len() as u16);
         lookups.push(gsub::SubstitutionLookup::Single(lookup));
     }
     for tag in &feature_tags {
-        let lookup_flag = lookup_flags
-            .get(tag)
-            .copied()
-            .unwrap_or_else(layout::LookupFlag::empty);
-        let mut multiples = rules
-            .multiples
-            .iter()
-            .filter(|(rule_tag, _, _)| rule_tag == tag)
-            .collect::<Vec<_>>();
+        let lookup_flag = lookup_flags.get(tag).copied().unwrap_or_else(layout::LookupFlag::empty);
+        let mut multiples = rules.multiples.iter().filter(|(rule_tag, _, _)| rule_tag == tag).collect::<Vec<_>>();
         if multiples.is_empty() {
             continue;
         }
         multiples.sort_by_key(|(_, target, _)| target.to_u16());
-        let coverage: layout::CoverageTable =
-            multiples.iter().map(|(_, target, _)| *target).collect();
-        let sequences = multiples
-            .iter()
-            .map(|(_, _, replacements)| gsub::Sequence::new((*replacements).clone()))
-            .collect();
-        let lookup = layout::Lookup::new(
-            lookup_flag,
-            vec![gsub::MultipleSubstFormat1::new(coverage, sequences)],
-        );
+        let coverage: layout::CoverageTable = multiples.iter().map(|(_, target, _)| *target).collect();
+        let sequences = multiples.iter().map(|(_, _, replacements)| gsub::Sequence::new((*replacements).clone())).collect();
+        let lookup = layout::Lookup::new(lookup_flag, vec![gsub::MultipleSubstFormat1::new(coverage, sequences)]);
         let lookup = apply_lookup_mark_set(lookup, *tag, &lookup_mark_sets, &mark_sets);
-        feature_indices_by_tag
-            .entry(*tag)
-            .or_default()
-            .push(lookups.len() as u16);
+        feature_indices_by_tag.entry(*tag).or_default().push(lookups.len() as u16);
         lookups.push(gsub::SubstitutionLookup::Multiple(lookup));
     }
     for tag in &feature_tags {
-        let lookup_flag = lookup_flags
-            .get(tag)
-            .copied()
-            .unwrap_or_else(layout::LookupFlag::empty);
-        let mut alternates = rules
-            .alternates
-            .iter()
-            .filter(|(rule_tag, _, _)| rule_tag == tag)
-            .collect::<Vec<_>>();
+        let lookup_flag = lookup_flags.get(tag).copied().unwrap_or_else(layout::LookupFlag::empty);
+        let mut alternates = rules.alternates.iter().filter(|(rule_tag, _, _)| rule_tag == tag).collect::<Vec<_>>();
         if alternates.is_empty() {
             continue;
         }
         alternates.sort_by_key(|(_, target, _)| target.to_u16());
-        let coverage: layout::CoverageTable =
-            alternates.iter().map(|(_, target, _)| *target).collect();
-        let sets = alternates
-            .iter()
-            .map(|(_, _, alternatives)| gsub::AlternateSet::new((*alternatives).clone()))
-            .collect();
-        let lookup = layout::Lookup::new(
-            lookup_flag,
-            vec![gsub::AlternateSubstFormat1::new(coverage, sets)],
-        );
+        let coverage: layout::CoverageTable = alternates.iter().map(|(_, target, _)| *target).collect();
+        let sets = alternates.iter().map(|(_, _, alternatives)| gsub::AlternateSet::new((*alternatives).clone())).collect();
+        let lookup = layout::Lookup::new(lookup_flag, vec![gsub::AlternateSubstFormat1::new(coverage, sets)]);
         let lookup = apply_lookup_mark_set(lookup, *tag, &lookup_mark_sets, &mark_sets);
-        feature_indices_by_tag
-            .entry(*tag)
-            .or_default()
-            .push(lookups.len() as u16);
+        feature_indices_by_tag.entry(*tag).or_default().push(lookups.len() as u16);
         lookups.push(gsub::SubstitutionLookup::Alternate(lookup));
     }
     for tag in &feature_tags {
-        let lookup_flag = lookup_flags
-            .get(tag)
-            .copied()
-            .unwrap_or_else(layout::LookupFlag::empty);
+        let lookup_flag = lookup_flags.get(tag).copied().unwrap_or_else(layout::LookupFlag::empty);
         let mut grouped = std::collections::BTreeMap::<GlyphId16, Vec<_>>::new();
         for (rule_tag, first, components, replacement) in rules.ligatures.iter() {
             if rule_tag != tag {
                 continue;
             }
-            grouped
-                .entry(*first)
-                .or_default()
-                .push((components.clone(), *replacement));
+            grouped.entry(*first).or_default().push((components.clone(), *replacement));
         }
         if grouped.is_empty() {
             continue;
@@ -408,26 +294,11 @@ fn build_simple_gsub_with_variations_and_unicode(
         let coverage: layout::CoverageTable = grouped.keys().copied().collect();
         let sets = grouped
             .into_values()
-            .map(|items| {
-                gsub::LigatureSet::new(
-                    items
-                        .into_iter()
-                        .map(|(components, replacement)| {
-                            gsub::Ligature::new(replacement, components)
-                        })
-                        .collect(),
-                )
-            })
+            .map(|items| gsub::LigatureSet::new(items.into_iter().map(|(components, replacement)| gsub::Ligature::new(replacement, components)).collect()))
             .collect();
-        let lookup = layout::Lookup::new(
-            lookup_flag,
-            vec![gsub::LigatureSubstFormat1::new(coverage, sets)],
-        );
+        let lookup = layout::Lookup::new(lookup_flag, vec![gsub::LigatureSubstFormat1::new(coverage, sets)]);
         let lookup = apply_lookup_mark_set(lookup, *tag, &lookup_mark_sets, &mark_sets);
-        feature_indices_by_tag
-            .entry(*tag)
-            .or_default()
-            .push(lookups.len() as u16);
+        feature_indices_by_tag.entry(*tag).or_default().push(lookups.len() as u16);
         lookups.push(gsub::SubstitutionLookup::Ligature(lookup));
     }
     for (rule_tag, sequence, target_index, replacement) in rules.contexts {
@@ -435,67 +306,36 @@ fn build_simple_gsub_with_variations_and_unicode(
             continue;
         };
         let single_lookup_index = lookups.len() as u16;
-        let single = layout::Lookup::new(
-            layout::LookupFlag::empty(),
-            vec![gsub::SingleSubst::format_2(
-                vec![target].into(),
-                vec![replacement],
-            )],
-        );
+        let single = layout::Lookup::new(layout::LookupFlag::empty(), vec![gsub::SingleSubst::format_2(vec![target].into(), vec![replacement])]);
         lookups.push(gsub::SubstitutionLookup::Single(single));
         let context = layout::Lookup::new(
-            lookup_flags
-                .get(&rule_tag)
-                .copied()
-                .unwrap_or_else(layout::LookupFlag::empty),
-            vec![gsub::SubstitutionSequenceContext::from(
-                layout::SequenceContext::format_3(
-                    sequence
-                        .into_iter()
-                        .map(|glyph| std::iter::once(glyph).collect())
-                        .collect(),
-                    vec![layout::SequenceLookupRecord::new(
-                        target_index as u16,
-                        single_lookup_index,
-                    )],
-                ),
-            )],
+            lookup_flags.get(&rule_tag).copied().unwrap_or_else(layout::LookupFlag::empty),
+            vec![gsub::SubstitutionSequenceContext::from(layout::SequenceContext::format_3(
+                sequence.into_iter().map(|glyph| std::iter::once(glyph).collect()).collect(),
+                vec![layout::SequenceLookupRecord::new(target_index as u16, single_lookup_index)],
+            ))],
         );
         let context = apply_lookup_mark_set(context, rule_tag, &lookup_mark_sets, &mark_sets);
-        feature_indices_by_tag
-            .entry(rule_tag)
-            .or_default()
-            .push(lookups.len() as u16);
+        feature_indices_by_tag.entry(rule_tag).or_default().push(lookups.len() as u16);
         lookups.push(gsub::SubstitutionLookup::Contextual(context));
     }
     for (rule_tag, sequence) in rules.ignored_contexts {
         let context = layout::Lookup::new(
-            lookup_flags
-                .get(&rule_tag)
-                .copied()
-                .unwrap_or_else(layout::LookupFlag::empty),
-            vec![gsub::SubstitutionChainContext::from(
-                layout::ChainedSequenceContext::format_3(
-                    Vec::new(),
-                    sequence.into_iter().map(Into::into).collect(),
-                    Vec::new(),
-                    Vec::new(),
-                ),
-            )],
+            lookup_flags.get(&rule_tag).copied().unwrap_or_else(layout::LookupFlag::empty),
+            vec![gsub::SubstitutionChainContext::from(layout::ChainedSequenceContext::format_3(
+                Vec::new(),
+                sequence.into_iter().map(Into::into).collect(),
+                Vec::new(),
+                Vec::new(),
+            ))],
         );
         let context = apply_lookup_mark_set(context, rule_tag, &lookup_mark_sets, &mark_sets);
-        feature_indices_by_tag
-            .entry(rule_tag)
-            .or_default()
-            .push(lookups.len() as u16);
+        feature_indices_by_tag.entry(rule_tag).or_default().push(lookups.len() as u16);
         lookups.push(gsub::SubstitutionLookup::ChainContextual(context));
     }
     for (rule_tag, target, backtrack, lookahead, replacement) in rules.reverse_contexts {
         let lookup = layout::Lookup::new(
-            lookup_flags
-                .get(&rule_tag)
-                .copied()
-                .unwrap_or_else(layout::LookupFlag::empty),
+            lookup_flags.get(&rule_tag).copied().unwrap_or_else(layout::LookupFlag::empty),
             vec![gsub::ReverseChainSingleSubstFormat1::new(
                 target.clone().into(),
                 backtrack.into_iter().map(Into::into).collect(),
@@ -504,20 +344,14 @@ fn build_simple_gsub_with_variations_and_unicode(
             )],
         );
         let lookup = apply_lookup_mark_set(lookup, rule_tag, &lookup_mark_sets, &mark_sets);
-        feature_indices_by_tag
-            .entry(rule_tag)
-            .or_default()
-            .push(lookups.len() as u16);
+        feature_indices_by_tag.entry(rule_tag).or_default().push(lookups.len() as u16);
         lookups.push(gsub::SubstitutionLookup::Reverse(lookup));
     }
     let feature_references = parse_feature_references(&source);
     loop {
         let mut changed = false;
         for (parent, child) in &feature_references {
-            let child_indices = feature_indices_by_tag
-                .get(child)
-                .cloned()
-                .unwrap_or_default();
+            let child_indices = feature_indices_by_tag.get(child).cloned().unwrap_or_default();
             let parent_indices = feature_indices_by_tag.entry(*parent).or_default();
             for index in child_indices {
                 if !parent_indices.contains(&index) {
@@ -531,19 +365,13 @@ fn build_simple_gsub_with_variations_and_unicode(
         }
     }
     let lookups = if feature_uses_extension_lookups(&source) {
-        lookups
-            .into_iter()
-            .map(wrap_gsub_extension_lookup)
-            .collect()
+        lookups.into_iter().map(wrap_gsub_extension_lookup).collect()
     } else {
         lookups
     };
     let lookup_list = layout::LookupList::new(lookups);
     let rvrn_tag = Tag::new(b"rvrn");
-    let rvrn_lookups = feature_indices_by_tag
-        .get(&rvrn_tag)
-        .cloned()
-        .unwrap_or_default();
+    let rvrn_lookups = feature_indices_by_tag.get(&rvrn_tag).cloned().unwrap_or_default();
     let rvrn_feature_index = feature_tags.iter().position(|tag| *tag == rvrn_tag);
     let scripts = build_script_list(&source, &feature_tags);
     let feature_list = layout::FeatureList::new(
@@ -552,13 +380,7 @@ fn build_simple_gsub_with_variations_and_unicode(
             .map(|tag| {
                 let indices = feature_indices_by_tag.remove(&tag).unwrap_or_default();
                 let indices = if tag == rvrn_tag { Vec::new() } else { indices };
-                layout::FeatureRecord::new(
-                    tag,
-                    layout::Feature::new(
-                        feature_params_for_tag(tag, &source, unicode_by_glyph),
-                        indices,
-                    ),
-                )
+                layout::FeatureRecord::new(tag, layout::Feature::new(feature_params_for_tag(tag, &source, unicode_by_glyph), indices))
             })
             .collect(),
     );
@@ -571,13 +393,9 @@ fn build_simple_gsub_with_variations_and_unicode(
                     .conditions
                     .iter()
                     .filter_map(|(tag, range)| {
-                        let (axis_index, min_value, default_value, max_value) =
-                            *axis_bounds.get(tag).or_else(|| {
-                                axis_bounds
-                                    .iter()
-                                    .find(|(axis, _)| axis.eq_ignore_ascii_case(tag))
-                                    .map(|(_, bounds)| bounds)
-                            })?;
+                        let (axis_index, min_value, default_value, max_value) = *axis_bounds
+                            .get(tag)
+                            .or_else(|| axis_bounds.iter().find(|(axis, _)| axis.eq_ignore_ascii_case(tag)).map(|(_, bounds)| bounds))?;
                         let normalize = |value: f64| {
                             if value >= default_value {
                                 (value - default_value) / (max_value - default_value).max(1e-9)
@@ -597,12 +415,10 @@ fn build_simple_gsub_with_variations_and_unicode(
                 (!conditions.is_empty()).then(|| {
                     layout::FeatureVariationRecord::new(
                         Some(layout::ConditionSet::new(conditions)),
-                        Some(layout::FeatureTableSubstitution::new(vec![
-                            layout::FeatureTableSubstitutionRecord::new(
-                                feature_index as u16,
-                                layout::Feature::new(None, rvrn_lookups.clone()),
-                            ),
-                        ])),
+                        Some(layout::FeatureTableSubstitution::new(vec![layout::FeatureTableSubstitutionRecord::new(
+                            feature_index as u16,
+                            layout::Feature::new(None, rvrn_lookups.clone()),
+                        )])),
                     )
                 })
             })

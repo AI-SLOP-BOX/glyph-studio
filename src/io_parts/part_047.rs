@@ -1,11 +1,9 @@
-
+#[rustfmt::skip]
 pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
     let font = norad::Font::load(path).map_err(|e| format!("UFO読み込みエラー: {}", e))?;
     let mut project = FontProject::new();
     project.opentype_features = font.features.clone();
-    if let Some(plist::Value::String(serialized)) =
-        font.lib.get("com.glyph-studio.unicodeVariationSequences")
-    {
+    if let Some(plist::Value::String(serialized)) = font.lib.get("com.glyph-studio.unicodeVariationSequences") {
         if let Ok(sequences) = serde_json::from_str(serialized) {
             project.unicode_variation_sequences = sequences;
         }
@@ -15,37 +13,25 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
             project.axis_mappings = mappings;
         }
     }
-    if let Some(plist::Value::String(serialized)) = font.lib.get("com.glyph-studio.preservedTables")
-    {
+    if let Some(plist::Value::String(serialized)) = font.lib.get("com.glyph-studio.preservedTables") {
         if let Ok(tables) = serde_json::from_str(serialized) {
             project.preserved_tables = tables;
         }
     }
-    if let Some(plist::Value::String(source)) =
-        font.lib.get("com.glyph-studio.preservedLayoutSource")
-    {
+    if let Some(plist::Value::String(source)) = font.lib.get("com.glyph-studio.preservedLayoutSource") {
         project.preserved_layout_source = Some(source.clone());
     }
-    if let Some(plist::Value::String(fingerprint)) =
-        font.lib.get("com.glyph-studio.preservedLayoutFingerprint")
-    {
+    if let Some(plist::Value::String(fingerprint)) = font.lib.get("com.glyph-studio.preservedLayoutFingerprint") {
         project.preserved_layout_fingerprint = fingerprint.parse().ok();
     }
     if let Some(plist::Value::String(classes)) = font.lib.get("com.glyph-studio.opentypeClasses") {
         project.opentype_classes = classes.clone();
         if !project.opentype_classes.trim().is_empty() {
             let class_source = project.opentype_classes.clone();
-            project.opentype_features = project
-                .opentype_features
-                .strip_prefix(&class_source)
-                .unwrap_or(&project.opentype_features)
-                .trim()
-                .to_string();
+            project.opentype_features = project.opentype_features.strip_prefix(&class_source).unwrap_or(&project.opentype_features).trim().to_string();
         }
     }
-    if let Some(plist::Value::String(serialized)) =
-        font.lib.get("com.glyph-studio.conditionalLayers")
-    {
+    if let Some(plist::Value::String(serialized)) = font.lib.get("com.glyph-studio.conditionalLayers") {
         if let Ok(layers) = serde_json::from_str(serialized) {
             project.conditional_layers = layers;
         }
@@ -57,38 +43,16 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
             }
         }
     }
-    project.metadata.family_name = font
-        .font_info
-        .family_name
-        .clone()
-        .unwrap_or(project.metadata.family_name);
-    project.metadata.style_name = font
-        .font_info
-        .style_name
-        .clone()
-        .unwrap_or(project.metadata.style_name);
+    project.metadata.family_name = font.font_info.family_name.clone().unwrap_or(project.metadata.family_name);
+    project.metadata.style_name = font.font_info.style_name.clone().unwrap_or(project.metadata.style_name);
     project.metadata.copyright = font.font_info.copyright.clone().unwrap_or_default();
-    project.metadata.designer = font
-        .font_info
-        .open_type_name_designer
-        .clone()
-        .unwrap_or_default();
-    project.metadata.manufacturer = font
-        .font_info
-        .open_type_name_manufacturer
-        .clone()
-        .unwrap_or_default();
+    project.metadata.designer = font.font_info.open_type_name_designer.clone().unwrap_or_default();
+    project.metadata.manufacturer = font.font_info.open_type_name_manufacturer.clone().unwrap_or_default();
     project.metadata.x_height = font.font_info.x_height.unwrap_or(0.0);
     project.metadata.cap_height = font.font_info.cap_height.unwrap_or(0.0);
     project.metadata.italic_angle = font.font_info.italic_angle.unwrap_or(0.0);
-    project.metadata.underline_position = font
-        .font_info
-        .postscript_underline_position
-        .unwrap_or(-100.0);
-    project.metadata.underline_thickness = font
-        .font_info
-        .postscript_underline_thickness
-        .unwrap_or(50.0);
+    project.metadata.underline_position = font.font_info.postscript_underline_position.unwrap_or(-100.0);
+    project.metadata.underline_thickness = font.font_info.postscript_underline_thickness.unwrap_or(50.0);
     project.metadata.is_fixed_pitch = font.font_info.postscript_is_fixed_pitch.unwrap_or(false);
     if let Some(plist::Value::Dictionary(metadata)) = font.lib.get("com.glyph-studio.metadata") {
         if let Some(revision) = metadata.get("fontRevision").and_then(plist::Value::as_real) {
@@ -96,10 +60,7 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
         }
     }
     if let Some(version) = font.font_info.open_type_name_version.as_deref() {
-        if let Some(revision) = version
-            .strip_prefix("Version ")
-            .and_then(|value| value.trim().parse::<f64>().ok())
-        {
+        if let Some(revision) = version.strip_prefix("Version ").and_then(|value| value.trim().parse::<f64>().ok()) {
             project.metadata.font_revision = revision;
         }
     }
@@ -113,15 +74,8 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
                 Some(crate::font_data::Guideline {
                     x: info.get("x").and_then(plist::Value::as_real)?,
                     y: info.get("y").and_then(plist::Value::as_real)?,
-                    angle: info
-                        .get("angle")
-                        .and_then(plist::Value::as_real)
-                        .unwrap_or(0.0),
-                    name: info
-                        .get("name")
-                        .and_then(plist::Value::as_string)
-                        .unwrap_or_default()
-                        .to_string(),
+                    angle: info.get("angle").and_then(plist::Value::as_real).unwrap_or(0.0),
+                    name: info.get("name").and_then(plist::Value::as_string).unwrap_or_default().to_string(),
                 })
             })
             .collect();
@@ -139,18 +93,12 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
                     x,
                     y,
                     angle,
-                    name: guide
-                        .name
-                        .as_ref()
-                        .map(ToString::to_string)
-                        .unwrap_or_default(),
+                    name: guide.name.as_ref().map(ToString::to_string).unwrap_or_default(),
                 }
             })
             .collect();
     }
-    if let Some(plist::Value::Dictionary(by_master)) =
-        font.lib.get("com.glyph-studio.guidelinesByMaster")
-    {
+    if let Some(plist::Value::Dictionary(by_master)) = font.lib.get("com.glyph-studio.guidelinesByMaster") {
         for (master_id, value) in by_master {
             let Some(values) = value.as_array() else {
                 continue;
@@ -162,21 +110,12 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
                     Some(crate::font_data::Guideline {
                         x: info.get("x").and_then(plist::Value::as_real)?,
                         y: info.get("y").and_then(plist::Value::as_real)?,
-                        angle: info
-                            .get("angle")
-                            .and_then(plist::Value::as_real)
-                            .unwrap_or(0.0),
-                        name: info
-                            .get("name")
-                            .and_then(plist::Value::as_string)
-                            .unwrap_or_default()
-                            .to_string(),
+                        angle: info.get("angle").and_then(plist::Value::as_real).unwrap_or(0.0),
+                        name: info.get("name").and_then(plist::Value::as_string).unwrap_or_default().to_string(),
                     })
                 })
                 .collect();
-            project
-                .guidelines_by_master
-                .insert(master_id.clone(), guides);
+            project.guidelines_by_master.insert(master_id.clone(), guides);
         }
     }
     if let Some(plist::Value::Dictionary(master_info)) = font.lib.get("com.glyph-studio.masters") {
@@ -185,32 +124,14 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
             let plist::Value::Dictionary(info) = value else {
                 continue;
             };
-            let id = info
-                .get("id")
-                .and_then(plist::Value::as_string)
-                .unwrap_or(name)
-                .to_string();
-            let weight = info
-                .get("weight")
-                .and_then(plist::Value::as_real)
-                .unwrap_or(400.0);
-            let width = info
-                .get("width")
-                .and_then(plist::Value::as_real)
-                .unwrap_or(100.0);
-            let is_bracket = info
-                .get("bracket")
-                .and_then(plist::Value::as_boolean)
-                .unwrap_or(false);
+            let id = info.get("id").and_then(plist::Value::as_string).unwrap_or(name).to_string();
+            let weight = info.get("weight").and_then(plist::Value::as_real).unwrap_or(400.0);
+            let width = info.get("width").and_then(plist::Value::as_real).unwrap_or(100.0);
+            let is_bracket = info.get("bracket").and_then(plist::Value::as_boolean).unwrap_or(false);
             let axes = info
                 .get("axes")
                 .and_then(plist::Value::as_dictionary)
-                .map(|values| {
-                    values
-                        .iter()
-                        .filter_map(|(tag, value)| Some((tag.clone(), value.as_real()?)))
-                        .collect()
-                })
+                .map(|values| values.iter().filter_map(|(tag, value)| Some((tag.clone(), value.as_real()?))).collect())
                 .unwrap_or_default();
             project.masters.push(FontMaster {
                 id,
@@ -225,66 +146,42 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
             project.default_master_id = first.id.clone();
         }
     }
-    if let Some(plist::Value::Dictionary(vertical_metrics)) =
-        font.lib.get("com.glyph-studio.verticalMetrics")
-    {
+    if let Some(plist::Value::Dictionary(vertical_metrics)) = font.lib.get("com.glyph-studio.verticalMetrics") {
         for (name, value) in vertical_metrics {
             let plist::Value::Dictionary(info) = value else {
                 continue;
             };
-            let Some(advance_height) = info.get("advanceHeight").and_then(plist::Value::as_real)
-            else {
+            let Some(advance_height) = info.get("advanceHeight").and_then(plist::Value::as_real) else {
                 continue;
             };
-            let top_side_bearing = info
-                .get("topSideBearing")
-                .and_then(plist::Value::as_real)
-                .unwrap_or(0.0);
-            project.vertical_metrics.insert(
-                name.clone(),
-                crate::font_data::VerticalMetrics {
-                    advance_height,
-                    top_side_bearing,
-                },
-            );
+            let top_side_bearing = info.get("topSideBearing").and_then(plist::Value::as_real).unwrap_or(0.0);
+            project.vertical_metrics.insert(name.clone(), crate::font_data::VerticalMetrics { advance_height, top_side_bearing });
         }
     }
-    if let Some(plist::Value::Dictionary(by_master)) =
-        font.lib.get("com.glyph-studio.verticalMetricsByMaster")
-    {
+    if let Some(plist::Value::Dictionary(by_master)) = font.lib.get("com.glyph-studio.verticalMetricsByMaster") {
         for (master_id, values) in by_master {
             let plist::Value::Dictionary(values) = values else {
                 continue;
             };
-            let metrics = project
-                .vertical_metrics_by_master
-                .entry(master_id.clone())
-                .or_default();
+            let metrics = project.vertical_metrics_by_master.entry(master_id.clone()).or_default();
             for (name, value) in values {
                 let plist::Value::Dictionary(info) = value else {
                     continue;
                 };
-                let Some(advance_height) =
-                    info.get("advanceHeight").and_then(plist::Value::as_real)
-                else {
+                let Some(advance_height) = info.get("advanceHeight").and_then(plist::Value::as_real) else {
                     continue;
                 };
                 metrics.insert(
                     name.clone(),
                     crate::font_data::VerticalMetrics {
                         advance_height,
-                        top_side_bearing: info
-                            .get("topSideBearing")
-                            .and_then(plist::Value::as_real)
-                            .unwrap_or(0.0),
+                        top_side_bearing: info.get("topSideBearing").and_then(plist::Value::as_real).unwrap_or(0.0),
                     },
                 );
             }
         }
     }
-    if let Some(plist::Value::Dictionary(by_master)) =
-        font.lib.get("com.glyph-studio.metricsByMaster")
-    {
+    if let Some(plist::Value::Dictionary(by_master)) = font.lib.get("com.glyph-studio.metricsByMaster") {
         for (master_id, value) in by_master {
             let Some(info) = value.as_dictionary() else {
                 continue;
@@ -295,23 +192,11 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
             let Some(descender) = info.get("descender").and_then(plist::Value::as_real) else {
                 continue;
             };
-            let line_gap = info
-                .get("lineGap")
-                .and_then(plist::Value::as_real)
-                .unwrap_or(0.0);
-            project.metrics_by_master.insert(
-                master_id.clone(),
-                crate::font_data::MasterMetrics {
-                    ascender,
-                    descender,
-                    line_gap,
-                },
-            );
+            let line_gap = info.get("lineGap").and_then(plist::Value::as_real).unwrap_or(0.0);
+            project.metrics_by_master.insert(master_id.clone(), crate::font_data::MasterMetrics { ascender, descender, line_gap });
         }
     }
-    if let Some(plist::Value::Dictionary(images)) =
-        font.lib.get("com.glyph-studio.backgroundImages")
-    {
+    if let Some(plist::Value::Dictionary(images)) = font.lib.get("com.glyph-studio.backgroundImages") {
         for (glyph, masters) in images {
             let plist::Value::Dictionary(masters) = masters else {
                 continue;
@@ -324,17 +209,12 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
             }
         }
     }
-    if let Some(plist::Value::Dictionary(opacities)) =
-        font.lib.get("com.glyph-studio.backgroundOpacities")
-    {
+    if let Some(plist::Value::Dictionary(opacities)) = font.lib.get("com.glyph-studio.backgroundOpacities") {
         for (glyph, masters) in opacities {
             let plist::Value::Dictionary(masters) = masters else {
                 continue;
             };
-            let target = project
-                .background_opacities
-                .entry(glyph.clone())
-                .or_default();
+            let target = project.background_opacities.entry(glyph.clone()).or_default();
             for (master, opacity) in masters {
                 if let Some(opacity) = opacity.as_real() {
                     target.insert(master.clone(), opacity as f32);
@@ -342,17 +222,12 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
             }
         }
     }
-    if let Some(plist::Value::Dictionary(transforms)) =
-        font.lib.get("com.glyph-studio.backgroundTransforms")
-    {
+    if let Some(plist::Value::Dictionary(transforms)) = font.lib.get("com.glyph-studio.backgroundTransforms") {
         for (glyph, masters) in transforms {
             let plist::Value::Dictionary(masters) = masters else {
                 continue;
             };
-            let target = project
-                .background_transforms
-                .entry(glyph.clone())
-                .or_default();
+            let target = project.background_transforms.entry(glyph.clone()).or_default();
             for (master, value) in masters {
                 let plist::Value::Dictionary(value) = value else {
                     continue;
@@ -363,28 +238,16 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
                 let Some(y) = value.get("y").and_then(plist::Value::as_real) else {
                     continue;
                 };
-                let scale = value
-                    .get("scale")
-                    .and_then(plist::Value::as_real)
-                    .unwrap_or(1.0);
+                let scale = value.get("scale").and_then(plist::Value::as_real).unwrap_or(1.0);
                 target.insert(
                     master.clone(),
                     crate::font_data::BackgroundImageTransform {
                         x: x as f32,
                         y: y as f32,
                         scale: scale as f32,
-                        rotation: value
-                            .get("rotation")
-                            .and_then(plist::Value::as_real)
-                            .unwrap_or(0.0) as f32,
-                        flip_x: value
-                            .get("flipX")
-                            .and_then(plist::Value::as_boolean)
-                            .unwrap_or(false),
-                        flip_y: value
-                            .get("flipY")
-                            .and_then(plist::Value::as_boolean)
-                            .unwrap_or(false),
+                        rotation: value.get("rotation").and_then(plist::Value::as_real).unwrap_or(0.0) as f32,
+                        flip_x: value.get("flipX").and_then(plist::Value::as_boolean).unwrap_or(false),
+                        flip_y: value.get("flipY").and_then(plist::Value::as_boolean).unwrap_or(false),
                     },
                 );
             }
@@ -402,28 +265,16 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
                     .filter_map(|value| {
                         value
                             .as_unsigned_integer()
-                            .or_else(|| {
-                                value
-                                    .as_signed_integer()
-                                    .and_then(|v| u64::try_from(v).ok())
-                            })
+                            .or_else(|| value.as_signed_integer().and_then(|v| u64::try_from(v).ok()))
                             .and_then(|v| u8::try_from(v).ok())
                     })
                     .collect();
-                channels
-                    .as_chunks::<4>()
-                    .0
-                    .iter()
-                    .map(|chunk| [chunk[0], chunk[1], chunk[2], chunk[3]])
-                    .collect()
+                channels.as_chunks::<4>().0.iter().map(|chunk| [chunk[0], chunk[1], chunk[2], chunk[3]]).collect()
             })
             .collect();
     }
     if let Some(plist::Value::Array(names)) = font.lib.get("com.glyph-studio.colorPaletteNames") {
-        project.color_palette_names = names
-            .iter()
-            .map(|value| value.as_string().unwrap_or_default().to_string())
-            .collect();
+        project.color_palette_names = names.iter().map(|value| value.as_string().unwrap_or_default().to_string()).collect();
     }
     if let Some(plist::Value::Array(types)) = font.lib.get("com.glyph-studio.colorPaletteTypes") {
         project.color_palette_types = types
@@ -431,26 +282,15 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
             .filter_map(|value| {
                 value
                     .as_unsigned_integer()
-                    .or_else(|| {
-                        value
-                            .as_signed_integer()
-                            .and_then(|v| u64::try_from(v).ok())
-                    })
+                    .or_else(|| value.as_signed_integer().and_then(|v| u64::try_from(v).ok()))
                     .and_then(|value| u32::try_from(value).ok())
             })
             .collect();
     }
-    if let Some(plist::Value::Array(names)) =
-        font.lib.get("com.glyph-studio.colorPaletteEntryNames")
-    {
-        project.color_palette_entry_names = names
-            .iter()
-            .map(|value| value.as_string().unwrap_or_default().to_string())
-            .collect();
+    if let Some(plist::Value::Array(names)) = font.lib.get("com.glyph-studio.colorPaletteEntryNames") {
+        project.color_palette_entry_names = names.iter().map(|value| value.as_string().unwrap_or_default().to_string()).collect();
     }
-    if let Some(plist::Value::Dictionary(color_layers)) =
-        font.lib.get("com.glyph-studio.colorLayers")
-    {
+    if let Some(plist::Value::Dictionary(color_layers)) = font.lib.get("com.glyph-studio.colorLayers") {
         for (name, values) in color_layers {
             let layers = values
                 .as_array()
@@ -462,19 +302,10 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
                         glyph: info.get("glyph")?.as_string()?.to_string(),
                         palette_index: info
                             .get("paletteIndex")
-                            .and_then(|value| {
-                                value.as_unsigned_integer().or_else(|| {
-                                    value
-                                        .as_signed_integer()
-                                        .and_then(|v| u64::try_from(v).ok())
-                                })
-                            })
+                            .and_then(|value| value.as_unsigned_integer().or_else(|| value.as_signed_integer().and_then(|v| u64::try_from(v).ok())))
                             .and_then(|value| u16::try_from(value).ok())?,
                         gradient: parse_color_gradient(info),
-                        alpha: info
-                            .get("alpha")
-                            .and_then(plist::Value::as_real)
-                            .unwrap_or(1.0),
+                        alpha: info.get("alpha").and_then(plist::Value::as_real).unwrap_or(1.0),
                     })
                 })
                 .collect();
@@ -482,9 +313,7 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
         }
     }
 
-    if let Some(plist::Value::Dictionary(color_layer_transforms)) =
-        font.lib.get("com.glyph-studio.colorLayerTransforms")
-    {
+    if let Some(plist::Value::Dictionary(color_layer_transforms)) = font.lib.get("com.glyph-studio.colorLayerTransforms") {
         for (name, values) in color_layer_transforms {
             let transforms = values
                 .as_array()
@@ -502,9 +331,7 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
                     })
                 })
                 .collect();
-            project
-                .color_layer_transforms
-                .insert(name.clone(), transforms);
+            project.color_layer_transforms.insert(name.clone(), transforms);
         }
     }
 
@@ -527,9 +354,7 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
 
     let default_layer_name = font.default_layer().name().to_string();
     for layer in font.iter_layers().skip(1) {
-        if !project.masters.iter().any(|master| {
-            master.id == layer.name().to_string() || master.name == layer.name().to_string()
-        }) {
+        if !project.masters.iter().any(|master| master.id == layer.name().to_string() || master.name == layer.name().to_string()) {
             project.masters.push(FontMaster {
                 id: layer.name().to_string(),
                 name: layer.name().to_string(),
@@ -560,33 +385,11 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
                     })
                 })
                 .collect();
-            glyph_data.left_kerning_group = glyph
-                .lib
-                .get("com.glyph-studio.leftKerningGroup")
-                .and_then(plist::Value::as_string)
-                .unwrap_or_default()
-                .to_string();
-            glyph_data.right_kerning_group = glyph
-                .lib
-                .get("com.glyph-studio.rightKerningGroup")
-                .and_then(plist::Value::as_string)
-                .unwrap_or_default()
-                .to_string();
-            glyph_data.left_metrics_key = glyph
-                .lib
-                .get("com.glyph-studio.leftMetricsKey")
-                .and_then(plist::Value::as_string)
-                .unwrap_or_default()
-                .to_string();
-            glyph_data.right_metrics_key = glyph
-                .lib
-                .get("com.glyph-studio.rightMetricsKey")
-                .and_then(plist::Value::as_string)
-                .unwrap_or_default()
-                .to_string();
-            if let Some(plist::Value::Dictionary(master_guidelines)) =
-                glyph.lib.get("com.glyph-studio.masterGuidelines")
-            {
+            glyph_data.left_kerning_group = glyph.lib.get("com.glyph-studio.leftKerningGroup").and_then(plist::Value::as_string).unwrap_or_default().to_string();
+            glyph_data.right_kerning_group = glyph.lib.get("com.glyph-studio.rightKerningGroup").and_then(plist::Value::as_string).unwrap_or_default().to_string();
+            glyph_data.left_metrics_key = glyph.lib.get("com.glyph-studio.leftMetricsKey").and_then(plist::Value::as_string).unwrap_or_default().to_string();
+            glyph_data.right_metrics_key = glyph.lib.get("com.glyph-studio.rightMetricsKey").and_then(plist::Value::as_string).unwrap_or_default().to_string();
+            if let Some(plist::Value::Dictionary(master_guidelines)) = glyph.lib.get("com.glyph-studio.masterGuidelines") {
                 glyph_data.master_guidelines = master_guidelines
                     .iter()
                     .filter_map(|(master_id, value)| {
@@ -602,15 +405,8 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
                                 Some(crate::font_data::Guideline {
                                     x: info.get("x").and_then(plist::Value::as_real)?,
                                     y: info.get("y").and_then(plist::Value::as_real)?,
-                                    angle: info
-                                        .get("angle")
-                                        .and_then(plist::Value::as_real)
-                                        .unwrap_or(0.0),
-                                    name: info
-                                        .get("name")
-                                        .and_then(plist::Value::as_string)
-                                        .unwrap_or_default()
-                                        .to_string(),
+                                    angle: info.get("angle").and_then(plist::Value::as_real).unwrap_or(0.0),
+                                    name: info.get("name").and_then(plist::Value::as_string).unwrap_or_default().to_string(),
                                 })
                             })
                             .collect::<Vec<_>>();
@@ -632,11 +428,7 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
                             x,
                             y,
                             angle,
-                            name: guide
-                                .name
-                                .as_ref()
-                                .map(ToString::to_string)
-                                .unwrap_or_default(),
+                            name: guide.name.as_ref().map(ToString::to_string).unwrap_or_default(),
                         }
                     })
                     .collect();
@@ -646,10 +438,7 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
                 let mut contour_data = crate::font_data::Contour::new();
                 for point in &contour.points {
                     let point_type = match point.typ {
-                        norad::PointType::Move
-                        | norad::PointType::Line
-                        | norad::PointType::Curve
-                        | norad::PointType::QCurve => crate::font_data::PointType::OnCurve,
+                        norad::PointType::Move | norad::PointType::Line | norad::PointType::Curve | norad::PointType::QCurve => crate::font_data::PointType::OnCurve,
                         norad::PointType::OffCurve => crate::font_data::PointType::OffCurve,
                     };
                     contour_data.points.push(crate::font_data::ContourPoint {
@@ -662,17 +451,15 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
                 glyph_data.contours.push(contour_data);
             }
             for component in &glyph.components {
-                glyph_data
-                    .components
-                    .push(crate::font_data::GlyphComponent {
-                        base: component.base.to_string(),
-                        x_scale: component.transform.x_scale,
-                        xy_scale: component.transform.xy_scale,
-                        yx_scale: component.transform.yx_scale,
-                        y_scale: component.transform.y_scale,
-                        x_offset: component.transform.x_offset,
-                        y_offset: component.transform.y_offset,
-                    });
+                glyph_data.components.push(crate::font_data::GlyphComponent {
+                    base: component.base.to_string(),
+                    x_scale: component.transform.x_scale,
+                    xy_scale: component.transform.xy_scale,
+                    yx_scale: component.transform.yx_scale,
+                    y_scale: component.transform.y_scale,
+                    x_offset: component.transform.x_offset,
+                    y_offset: component.transform.y_offset,
+                });
             }
 
             if is_default {
@@ -687,10 +474,7 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
                     components: glyph_data.components,
                     anchors: glyph_data.anchors,
                 };
-                let existing = project
-                    .glyphs
-                    .entry(name.clone())
-                    .or_insert_with(|| crate::font_data::GlyphData::new(name, unicode));
+                let existing = project.glyphs.entry(name.clone()).or_insert_with(|| crate::font_data::GlyphData::new(name, unicode));
                 existing.layers.insert(master_id.clone(), layer);
             }
         }
@@ -730,21 +514,15 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
             };
             for expanded_left in &left_names {
                 for expanded_right in &right_names {
-                    if project.glyphs.contains_key(expanded_left)
-                        && project.glyphs.contains_key(expanded_right)
-                    {
-                        project
-                            .kerning
-                            .insert((expanded_left.clone(), expanded_right.clone()), *value);
+                    if project.glyphs.contains_key(expanded_left) && project.glyphs.contains_key(expanded_right) {
+                        project.kerning.insert((expanded_left.clone(), expanded_right.clone()), *value);
                     }
                 }
             }
         }
     }
 
-    if let Some(plist::Value::Dictionary(by_master)) =
-        font.lib.get("com.glyph-studio.kerningByMaster")
-    {
+    if let Some(plist::Value::Dictionary(by_master)) = font.lib.get("com.glyph-studio.kerningByMaster") {
         for (master_id, value) in by_master {
             let Some(entries) = value.as_array() else {
                 continue;
@@ -754,10 +532,7 @@ pub fn load_ufo(path: &Path) -> Result<FontProject, String> {
                 .filter_map(|entry| {
                     let entry = entry.as_dictionary()?;
                     Some((
-                        (
-                            entry.get("left").and_then(plist_string)?,
-                            entry.get("right").and_then(plist_string)?,
-                        ),
+                        (entry.get("left").and_then(plist_string)?, entry.get("right").and_then(plist_string)?),
                         entry.get("value").and_then(plist_number)?,
                     ))
                 })

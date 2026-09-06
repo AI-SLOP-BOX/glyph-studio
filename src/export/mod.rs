@@ -100,6 +100,8 @@ include!("../export_parts/part_084.rs");
 include!("../export_parts/part_085.rs");
 include!("../export_parts/part_086.rs");
 include!("../export_parts/part_087.rs");
+include!("../export_parts/kerning_pairs.rs");
+include!("../export_parts/position_features.rs");
 include!("../export_parts/part_088.rs");
 include!("../export_parts/part_089.rs");
 include!("../export_parts/part_090.rs");

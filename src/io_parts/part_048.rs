@@ -3,7 +3,7 @@
 mod tests {
     use super::*;
     use crate::font_data::{
-        Contour, ContourPoint, FontMaster, GlyphComponent, GlyphData, GlyphLayer,
+        Contour, ContourPoint, GlyphComponent, GlyphData,
     };
 
     include!("../io_tests/test_000.rs");

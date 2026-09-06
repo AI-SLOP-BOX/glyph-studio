@@ -1,8 +1,7 @@
-
+#[rustfmt::skip]
 pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
     let bytes = std::fs::read(path).map_err(|e| format!("TTF読み込みエラー: {e}"))?;
-    let mut face =
-        ttf_parser::Face::parse(&bytes, 0).map_err(|e| format!("フォント解析エラー: {e:?}"))?;
+    let mut face = ttf_parser::Face::parse(&bytes, 0).map_err(|e| format!("フォント解析エラー: {e:?}"))?;
     let mut project = FontProject::new();
     project.preserved_tables = preserved_sfnt_tables(&bytes);
     for index in 0..face.names().len() {
@@ -15,10 +14,7 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                     8 => project.metadata.manufacturer = value,
                     9 => project.metadata.designer = value,
                     5 => {
-                        if let Some(version) = value
-                            .strip_prefix("Version ")
-                            .and_then(|value| value.trim().parse::<f64>().ok())
-                        {
+                        if let Some(version) = value.strip_prefix("Version ").and_then(|value| value.trim().parse::<f64>().ok()) {
                             project.metadata.font_revision = version;
                         }
                     }
@@ -72,10 +68,8 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
             project.metadata.strikeout_size = os2.y_strikeout_size();
             project.metadata.strikeout_position = os2.y_strikeout_position();
             project.metadata.family_class = os2.s_family_class();
-            project.metadata.lower_optical_point_size =
-                os2.us_lower_optical_point_size().unwrap_or(0);
-            project.metadata.upper_optical_point_size =
-                os2.us_upper_optical_point_size().unwrap_or(0);
+            project.metadata.lower_optical_point_size = os2.us_lower_optical_point_size().unwrap_or(0);
+            project.metadata.upper_optical_point_size = os2.us_upper_optical_point_size().unwrap_or(0);
             if let Ok(panose) = os2.panose_10().try_into() {
                 project.metadata.panose = panose;
             }
@@ -85,11 +79,7 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
         }
     }
     if let Some(fvar) = face.tables().fvar {
-        let axes = fvar
-            .axes
-            .into_iter()
-            .map(|axis| (axis.tag.to_string(), axis.def_value as f64))
-            .collect();
+        let axes = fvar.axes.into_iter().map(|axis| (axis.tag.to_string(), axis.def_value as f64)).collect();
         if let Some(master) = project.masters.first_mut() {
             master.axes = axes;
         }
@@ -106,13 +96,7 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                     if project.axis_names.contains_key(&tag) {
                         continue;
                     }
-                    let axis_name = names_table
-                        .name_record()
-                        .iter()
-                        .find(|record| record.name_id() == axis.axis_name_id())
-                        .and_then(|record| record.string(string_data).ok())
-                        .map(|name| name.chars().collect::<String>())
-                        .filter(|name| !name.trim().is_empty());
+                    let axis_name = names_table.name_record().iter().find(|record| record.name_id() == axis.axis_name_id()).and_then(|record| record.string(string_data).ok()).map(|name| name.chars().collect::<String>()).filter(|name| !name.trim().is_empty());
                     if let Some(name) = axis_name {
                         project.axis_names.insert(tag, name);
                     }
@@ -128,13 +112,7 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
             let string_data = names_table.string_data();
             for axis in stat.design_axes().into_iter().flatten() {
                 let tag = axis.axis_tag().to_string();
-                let axis_name = names_table
-                    .name_record()
-                    .iter()
-                    .find(|record| record.name_id() == axis.axis_name_id())
-                    .and_then(|record| record.string(string_data).ok())
-                    .map(|name| name.chars().collect::<String>())
-                    .filter(|name| !name.trim().is_empty());
+                let axis_name = names_table.name_record().iter().find(|record| record.name_id() == axis.axis_name_id()).and_then(|record| record.string(string_data).ok()).map(|name| name.chars().collect::<String>()).filter(|name| !name.trim().is_empty());
                 if let Some(name) = axis_name {
                     project.axis_names.insert(tag, name);
                 }
@@ -142,18 +120,11 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
         }
     }
     if let Some(fvar) = face.tables().fvar {
-        let axis_tags = fvar
-            .axes
-            .into_iter()
-            .map(|axis| axis.tag.to_string())
-            .collect::<Vec<_>>();
+        let axis_tags = fvar.axes.into_iter().map(|axis| axis.tag.to_string()).collect::<Vec<_>>();
         if let Ok(font) = FontRef::new(&bytes) {
             if let Ok(avar) = font.avar() {
                 if avar.axis_count() as usize == axis_tags.len() {
-                    for (tag, segment_maps) in axis_tags
-                        .into_iter()
-                        .zip(avar.axis_segment_maps().iter().filter_map(Result::ok))
-                    {
+                    for (tag, segment_maps) in axis_tags.into_iter().zip(avar.axis_segment_maps().iter().filter_map(Result::ok)) {
                         let points = segment_maps
                             .axis_value_maps()
                             .iter()
@@ -162,11 +133,7 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                                 output: point.to_coordinate().to_f32() as f64,
                             })
                             .collect::<Vec<_>>();
-                        if !points.is_empty()
-                            && points
-                                .iter()
-                                .any(|point| (point.input - point.output).abs() > f64::EPSILON)
-                        {
+                        if !points.is_empty() && points.iter().any(|point| (point.input - point.output).abs() > f64::EPSILON) {
                             project.axis_mappings.insert(tag, points);
                         }
                     }
@@ -187,14 +154,8 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
     }
     for raw_id in 0..face.number_of_glyphs() {
         let glyph_id = ttf_parser::GlyphId(raw_id);
-        let name = face
-            .glyph_name(glyph_id)
-            .map(str::to_string)
-            .unwrap_or_else(|| format!("glyph{raw_id}"));
-        let unicode = unicodes
-            .get(&raw_id)
-            .and_then(|values| values.first())
-            .copied();
+        let name = face.glyph_name(glyph_id).map(str::to_string).unwrap_or_else(|| format!("glyph{raw_id}"));
+        let unicode = unicodes.get(&raw_id).and_then(|values| values.first()).copied();
         let mut glyph = crate::font_data::GlyphData::new(name.clone(), unicode);
         if let Some(values) = unicodes.get(&raw_id) {
             glyph.unicodes = values.iter().copied().skip(1).collect();
@@ -209,13 +170,7 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
         project.glyphs.insert(name.clone(), glyph);
         project.glyph_order.push(name);
     }
-    let names: Vec<String> = (0..face.number_of_glyphs())
-        .map(|raw_id| {
-            face.glyph_name(ttf_parser::GlyphId(raw_id))
-                .map(str::to_string)
-                .unwrap_or_else(|| format!("glyph{raw_id}"))
-        })
-        .collect();
+    let names: Vec<String> = (0..face.number_of_glyphs()).map(|raw_id| face.glyph_name(ttf_parser::GlyphId(raw_id)).map(str::to_string).unwrap_or_else(|| format!("glyph{raw_id}"))).collect();
     // Convert an imported GDEF glyph classification into an explicit
     // Feature File declaration. The exporter can then retain Ligature/Mark/
     // Component semantics even when the original font has no editable source.
@@ -236,11 +191,7 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                     groups[index].push(name.clone());
                 }
                 if groups.iter().any(|group| !group.is_empty()) {
-                    let definitions = groups
-                        .iter()
-                        .map(|group| format!("[{}]", group.join(" ")))
-                        .collect::<Vec<_>>()
-                        .join(", ");
+                    let definitions = groups.iter().map(|group| format!("[{}]", group.join(" "))).collect::<Vec<_>>().join(", ");
                     gdef_source.push_str(&format!("GlyphClassDef {definitions}; "));
                 }
             }
@@ -254,11 +205,7 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                         let Some(name) = names.get(glyph_id.to_u32() as usize) else {
                             continue;
                         };
-                        let points = point_table
-                            .point_indices()
-                            .iter()
-                            .map(|point| point.get().to_string())
-                            .collect::<Vec<_>>();
+                        let points = point_table.point_indices().iter().map(|point| point.get().to_string()).collect::<Vec<_>>();
                         if !points.is_empty() {
                             gdef_source.push_str(&format!("Attach {name} {}; ", points.join(" ")));
                         }
@@ -266,10 +213,7 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                 }
             }
             if let Some(Ok(lig_caret_list)) = gdef.lig_caret_list() {
-                let glyphs = lig_caret_list
-                    .coverage()
-                    .ok()
-                    .map(|coverage| coverage.iter());
+                let glyphs = lig_caret_list.coverage().ok().map(|coverage| coverage.iter());
                 if let Some(glyphs) = glyphs {
                     for (glyph_id, lig_glyph) in glyphs.zip(lig_caret_list.lig_glyphs().iter()) {
                         let Ok(lig_glyph) = lig_glyph else {
@@ -283,23 +227,9 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                             .iter()
                             .filter_map(Result::ok)
                             .filter_map(|caret| match caret {
-                                read_fonts::tables::gdef::CaretValue::Format1(value) => Some(
-                                    format!("LigatureCaretByPos {name} {}", value.coordinate()),
-                                ),
-                                read_fonts::tables::gdef::CaretValue::Format2(value) => {
-                                    Some(format!(
-                                        "LigatureCaretByIndex {name} {}",
-                                        value.caret_value_point_index()
-                                    ))
-                                }
-                                read_fonts::tables::gdef::CaretValue::Format3(value)
-                                    if value.device_offset().to_usize() == 0 =>
-                                {
-                                    Some(format!(
-                                        "LigatureCaretByPos {name} {}",
-                                        value.coordinate()
-                                    ))
-                                }
+                                read_fonts::tables::gdef::CaretValue::Format1(value) => Some(format!("LigatureCaretByPos {name} {}", value.coordinate())),
+                                read_fonts::tables::gdef::CaretValue::Format2(value) => Some(format!("LigatureCaretByIndex {name} {}", value.caret_value_point_index())),
+                                read_fonts::tables::gdef::CaretValue::Format3(value) if value.device_offset().to_usize() == 0 => Some(format!("LigatureCaretByPos {name} {}", value.coordinate())),
                                 read_fonts::tables::gdef::CaretValue::Format3(_) => None,
                             })
                             .collect::<Vec<_>>();
@@ -314,28 +244,20 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                     let Ok(coverage) = coverage else {
                         continue;
                     };
-                    let glyphs = coverage
-                        .iter()
-                        .filter_map(|glyph_id| names.get(glyph_id.to_u32() as usize))
-                        .cloned()
-                        .collect::<Vec<_>>();
+                    let glyphs = coverage.iter().filter_map(|glyph_id| names.get(glyph_id.to_u32() as usize)).cloned().collect::<Vec<_>>();
                     if !glyphs.is_empty() {
-                        mark_set_source
-                            .push_str(&format!("@GSMarkSet{index} = [{}]; ", glyphs.join(" ")));
+                        mark_set_source.push_str(&format!("@GSMarkSet{index} = [{}]; ", glyphs.join(" ")));
                     }
                 }
             }
             if !gdef_source.is_empty() {
-                project.opentype_features =
-                    format!("{mark_set_source}table GDEF {{ {gdef_source}}} GDEF;");
+                project.opentype_features = format!("{mark_set_source}table GDEF {{ {gdef_source}}} GDEF;");
             } else if !mark_set_source.is_empty() {
                 project.opentype_features = mark_set_source;
             }
         }
         if let Ok(name_table) = font.name() {
-            let raw_name = font
-                .table_data(read_fonts::types::Tag::new(b"name"))
-                .map(|data| data.as_bytes());
+            let raw_name = font.table_data(read_fonts::types::Tag::new(b"name")).map(|data| data.as_bytes());
             if let Some(raw_name) = raw_name {
                 let storage_start = usize::from(name_table.storage_offset());
                 let mut records = Vec::new();
@@ -346,23 +268,13 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                     }
                     let start = storage_start + record.string_offset().to_usize();
                     let end = start + usize::from(record.length());
-                    let Some(value) = decode_name_string(
-                        record.platform_id(),
-                        raw_name.get(start..end).unwrap_or_default(),
-                    ) else {
+                    let Some(value) = decode_name_string(record.platform_id(), raw_name.get(start..end).unwrap_or_default()) else {
                         continue;
                     };
                     if value.is_empty() {
                         continue;
                     }
-                    records.push(format!(
-                        "nameid {} {} {} 0x{:04X} \"{}\";",
-                        name_id,
-                        record.platform_id(),
-                        record.encoding_id(),
-                        record.language_id(),
-                        escape_feature_name(&value)
-                    ));
+                    records.push(format!("nameid {} {} {} 0x{:04X} \"{}\";", name_id, record.platform_id(), record.encoding_id(), record.language_id(), escape_feature_name(&value)));
                 }
                 if !records.is_empty() {
                     if !project.opentype_features.is_empty() {
@@ -415,15 +327,8 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
         collect_imported_languagesystems!(gpos, imported_languagesystems);
     }
     if !imported_languagesystems.is_empty() {
-        let declarations = imported_languagesystems
-            .into_iter()
-            .collect::<Vec<_>>()
-            .join(" ");
-        project.opentype_features = if project.opentype_features.is_empty() {
-            declarations
-        } else {
-            format!("{declarations}\n{}", project.opentype_features)
-        };
+        let declarations = imported_languagesystems.into_iter().collect::<Vec<_>>().join(" ");
+        project.opentype_features = if project.opentype_features.is_empty() { declarations } else { format!("{declarations}\n{}", project.opentype_features) };
     }
     import_mark_to_base_anchors(&face, &names, &mut project);
     import_cursive_anchors(&face, &names, &mut project);
@@ -442,18 +347,8 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                     let Some(glyph) = names.get(glyph_id.to_u32() as usize) else {
                         continue;
                     };
-                    if !project
-                        .unicode_variation_sequences
-                        .iter()
-                        .any(|mapping| mapping.base == base && mapping.selector == selector)
-                    {
-                        project.unicode_variation_sequences.push(
-                            crate::font_data::UnicodeVariationSequence {
-                                base,
-                                selector,
-                                glyph: glyph.clone(),
-                            },
-                        );
+                    if !project.unicode_variation_sequences.iter().any(|mapping| mapping.base == base && mapping.selector == selector) {
+                        project.unicode_variation_sequences.push(crate::font_data::UnicodeVariationSequence { base, selector, glyph: glyph.clone() });
                     }
                 }
             }
@@ -464,28 +359,13 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
             if let Some(Ok(records)) = cpal.color_records_array() {
                 let entries = usize::from(cpal.num_palette_entries());
                 let palettes = usize::from(cpal.num_palettes());
-                project.color_palettes = (0..palettes)
-                    .map(|palette| {
-                        (0..entries)
-                            .filter_map(|index| {
-                                records.get(palette * entries + index).map(|record| {
-                                    [record.red(), record.green(), record.blue(), record.alpha()]
-                                })
-                            })
-                            .collect()
-                    })
-                    .collect();
+                project.color_palettes = (0..palettes).map(|palette| (0..entries).filter_map(|index| records.get(palette * entries + index).map(|record| [record.red(), record.green(), record.blue(), record.alpha()])).collect()).collect();
             }
             if cpal.version() >= 1 {
                 if let Some(Ok(types)) = cpal.palette_types_array() {
-                    project.color_palette_types = types
-                        .iter()
-                        .map(|palette_type| palette_type.get().bits())
-                        .collect();
+                    project.color_palette_types = types.iter().map(|palette_type| palette_type.get().bits()).collect();
                 }
-                if let (Some(Ok(labels)), Ok(name_table)) =
-                    (cpal.palette_entry_labels_array(), font.name())
-                {
+                if let (Some(Ok(labels)), Ok(name_table)) = (cpal.palette_entry_labels_array(), font.name()) {
                     let string_data = name_table.string_data();
                     project.color_palette_entry_names = labels
                         .iter()
@@ -494,19 +374,11 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                             if name_id == u16::MAX {
                                 return String::new();
                             }
-                            name_table
-                                .name_record()
-                                .iter()
-                                .find(|record| record.name_id() == NameId::new(name_id))
-                                .and_then(|record| record.string(string_data).ok())
-                                .map(|name| name.chars().collect())
-                                .unwrap_or_default()
+                            name_table.name_record().iter().find(|record| record.name_id() == NameId::new(name_id)).and_then(|record| record.string(string_data).ok()).map(|name| name.chars().collect()).unwrap_or_default()
                         })
                         .collect();
                 }
-                if let (Some(Ok(labels)), Ok(name_table)) =
-                    (cpal.palette_labels_array(), font.name())
-                {
+                if let (Some(Ok(labels)), Ok(name_table)) = (cpal.palette_labels_array(), font.name()) {
                     let string_data = name_table.string_data();
                     project.color_palette_names = labels
                         .iter()
@@ -515,13 +387,7 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                             if name_id == u16::MAX {
                                 return String::new();
                             }
-                            name_table
-                                .name_record()
-                                .iter()
-                                .find(|record| record.name_id() == NameId::new(name_id))
-                                .and_then(|record| record.string(string_data).ok())
-                                .map(|name| name.chars().collect())
-                                .unwrap_or_default()
+                            name_table.name_record().iter().find(|record| record.name_id() == NameId::new(name_id)).and_then(|record| record.string(string_data).ok()).map(|name| name.chars().collect()).unwrap_or_default()
                         })
                         .collect();
                 }
@@ -533,19 +399,7 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                 let Ok(Some(range)) = colr.v0_base_glyph(GlyphId::new(raw_id as u32)) else {
                     continue;
                 };
-                let layers = range
-                    .filter_map(|index| colr.v0_layer(index).ok())
-                    .filter_map(|(glyph, palette_index)| {
-                        names.get(usize::from(glyph.to_u16())).map(|glyph| {
-                            crate::font_data::ColorLayer {
-                                glyph: glyph.clone(),
-                                palette_index,
-                                gradient: None,
-                                alpha: 1.0,
-                            }
-                        })
-                    })
-                    .collect::<Vec<_>>();
+                let layers = range.filter_map(|index| colr.v0_layer(index).ok()).filter_map(|(glyph, palette_index)| names.get(usize::from(glyph.to_u16())).map(|glyph| crate::font_data::ColorLayer { glyph: glyph.clone(), palette_index, gradient: None, alpha: 1.0 })).collect::<Vec<_>>();
                 if !layers.is_empty() {
                     project.color_layers.insert(name.clone(), layers);
                 }
@@ -559,28 +413,16 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                 let Ok(raw_id) = u16::try_from(raw_id) else {
                     continue;
                 };
-                let Ok(Some((paint, _))) = colr.v1_base_glyph(GlyphId::new(u32::from(raw_id)))
-                else {
+                let Ok(Some((paint, _))) = colr.v1_base_glyph(GlyphId::new(u32::from(raw_id))) else {
                     continue;
                 };
                 let mut imported_layers = Vec::new();
                 let mut imported_transforms = Vec::new();
-                import_colr_v1_paint(
-                    &colr,
-                    paint,
-                    &names,
-                    None,
-                    None,
-                    &mut imported_layers,
-                    &mut imported_transforms,
-                    0,
-                );
+                import_colr_v1_paint(&colr, paint, &names, None, None, &mut imported_layers, &mut imported_transforms, 0);
                 if !imported_layers.is_empty() {
                     project.color_layers.insert(name.clone(), imported_layers);
                     if imported_transforms.iter().any(Option::is_some) {
-                        project
-                            .color_layer_transforms
-                            .insert(name.clone(), imported_transforms);
+                        project.color_layer_transforms.insert(name.clone(), imported_transforms);
                     }
                 }
             }
@@ -597,21 +439,12 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                     let metric = long_metrics[raw_id];
                     (metric.advance(), metric.side_bearing())
                 } else if let Some(metric) = long_metrics.last() {
-                    let bearing = top_bearings
-                        .get(raw_id.saturating_sub(long_count))
-                        .map(|value| value.get())
-                        .unwrap_or_else(|| metric.side_bearing());
+                    let bearing = top_bearings.get(raw_id.saturating_sub(long_count)).map(|value| value.get()).unwrap_or_else(|| metric.side_bearing());
                     (metric.advance(), bearing)
                 } else {
                     continue;
                 };
-                project.vertical_metrics.insert(
-                    name.clone(),
-                    crate::font_data::VerticalMetrics {
-                        advance_height: f64::from(advance),
-                        top_side_bearing: f64::from(bearing),
-                    },
-                );
+                project.vertical_metrics.insert(name.clone(), crate::font_data::VerticalMetrics { advance_height: f64::from(advance), top_side_bearing: f64::from(bearing) });
             }
         }
     }
@@ -622,14 +455,9 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
             }
             for left in 0..face.number_of_glyphs() {
                 for right in 0..face.number_of_glyphs() {
-                    if let Some(value) = subtable
-                        .glyphs_kerning(ttf_parser::GlyphId(left), ttf_parser::GlyphId(right))
-                    {
+                    if let Some(value) = subtable.glyphs_kerning(ttf_parser::GlyphId(left), ttf_parser::GlyphId(right)) {
                         if value != 0 {
-                            project.kerning.insert(
-                                (names[left as usize].clone(), names[right as usize].clone()),
-                                value as f64,
-                            );
+                            project.kerning.insert((names[left as usize].clone(), names[right as usize].clone()), value as f64);
                         }
                     }
                 }
@@ -647,14 +475,8 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                 let Some(lookup) = gpos.lookups.get(lookup_index) else {
                     continue;
                 };
-                for subtable in lookup
-                    .subtables
-                    .into_iter::<ttf_parser::gpos::PositioningSubtable>()
-                {
-                    let ttf_parser::gpos::PositioningSubtable::Pair(
-                        ttf_parser::gpos::PairAdjustment::Format1 { coverage, sets },
-                    ) = subtable
-                    else {
+                for subtable in lookup.subtables.into_iter::<ttf_parser::gpos::PositioningSubtable>() {
+                    let ttf_parser::gpos::PositioningSubtable::Pair(ttf_parser::gpos::PairAdjustment::Format1 { coverage, sets }) = subtable else {
                         continue;
                     };
                     for left in 0..face.number_of_glyphs() {
@@ -666,15 +488,11 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                             continue;
                         };
                         for right in 0..face.number_of_glyphs() {
-                            let Some((first, _second)) = pair_set.get(ttf_parser::GlyphId(right))
-                            else {
+                            let Some((first, _second)) = pair_set.get(ttf_parser::GlyphId(right)) else {
                                 continue;
                             };
                             if first.x_advance != 0 {
-                                project.kerning.insert(
-                                    (names[left as usize].clone(), names[right as usize].clone()),
-                                    first.x_advance as f64,
-                                );
+                                project.kerning.insert((names[left as usize].clone(), names[right as usize].clone()), first.x_advance as f64);
                             }
                         }
                     }
@@ -729,13 +547,7 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
                                         continue;
                                     };
                                     if values[0].x_advance != 0 {
-                                        project.kerning.insert(
-                                            (
-                                                names[left as usize].clone(),
-                                                names[right as usize].clone(),
-                                            ),
-                                            values[0].x_advance as f64,
-                                        );
+                                        project.kerning.insert((names[left as usize].clone(), names[right as usize].clone()), values[0].x_advance as f64);
                                     }
                                 }
                             }
@@ -745,148 +557,7 @@ pub fn load_ttf(path: &Path) -> Result<FontProject, String> {
             }
         }
     }
-    if let Some(fvar) = face.tables().fvar {
-        let axes: Vec<_> = fvar.axes.into_iter().collect();
-        for axis in &axes {
-            for (suffix, value) in [("min", axis.min_value), ("max", axis.max_value)] {
-                let id = format!("{}-{}", axis.tag, suffix);
-                if project.masters.iter().any(|master| master.id == id) {
-                    continue;
-                }
-                for default_axis in &axes {
-                    face.set_variation(default_axis.tag, default_axis.def_value);
-                }
-                face.set_variation(axis.tag, value);
-                let mut master = FontMaster {
-                    id: id.clone(),
-                    name: id.clone(),
-                    ..FontMaster::default()
-                };
-                for default_axis in &axes {
-                    master
-                        .axes
-                        .insert(default_axis.tag.to_string(), default_axis.def_value as f64);
-                }
-                master.axes.insert(axis.tag.to_string(), value as f64);
-                project.masters.push(master);
-                for raw_id in 0..face.number_of_glyphs() {
-                    let glyph_id = ttf_parser::GlyphId(raw_id);
-                    let Some(name) = project.glyph_order.get(raw_id as usize) else {
-                        continue;
-                    };
-                    let Some(glyph) = project.glyphs.get_mut(name) else {
-                        continue;
-                    };
-                    let mut collector = OutlineCollector::new();
-                    face.outline_glyph(glyph_id, &mut collector);
-                    if !collector.current.points.is_empty() {
-                        collector.contours.push(collector.current);
-                    }
-                    glyph.layers.insert(
-                        id.clone(),
-                        GlyphLayer {
-                            width: face.glyph_hor_advance(glyph_id).unwrap_or(0) as f64,
-                            contours: collector.contours,
-                            components: Vec::new(),
-                            anchors: Vec::new(),
-                        },
-                    );
-                }
-            }
-        }
-        if let Ok(font_ref) = FontRef::new(&bytes) {
-            if let Ok(variable) = font_ref.fvar() {
-                let names_table = font_ref.name().ok();
-                let name_data = names_table.as_ref().map(|table| table.string_data());
-                let instances = variable
-                    .instances()
-                    .ok()
-                    .into_iter()
-                    .flat_map(|items| items.iter().filter_map(Result::ok));
-                for (instance_index, instance) in instances.enumerate() {
-                    let instance_name = names_table
-                        .as_ref()
-                        .and_then(|table| {
-                            table
-                                .name_record()
-                                .iter()
-                                .find(|record| record.name_id() == instance.subfamily_name_id)
-                        })
-                        .and_then(|record| {
-                            name_data
-                                .as_ref()
-                                .and_then(|data| record.string(*data).ok())
-                        })
-                        .map(|name| name.chars().collect::<String>())
-                        .filter(|name| !name.trim().is_empty())
-                        .unwrap_or_else(|| format!("Instance {}", instance_index + 1));
-                    let mut instance_axes = std::collections::HashMap::new();
-                    let mut instance_weight = 400.0;
-                    let mut instance_width = 100.0;
-                    for (axis, value) in axes.iter().zip(instance.coordinates.iter()) {
-                        let value = value.get().to_f32() as f64;
-                        let tag = axis.tag.to_string();
-                        if tag.eq_ignore_ascii_case("wght") {
-                            instance_weight = value;
-                        } else if tag.eq_ignore_ascii_case("wdth") {
-                            instance_width = value;
-                        }
-                        instance_axes.insert(tag, value);
-                    }
-                    project.instances.push(crate::font_data::FontInstance {
-                        name: instance_name.clone(),
-                        axes: instance_axes,
-                        weight: instance_weight,
-                        width: instance_width,
-                    });
-                    let id = format!("instance-{}", instance_index + 1);
-                    if project.masters.iter().any(|master| master.id == id) {
-                        continue;
-                    }
-                    for axis in &axes {
-                        face.set_variation(axis.tag, axis.def_value);
-                    }
-                    let mut master = FontMaster {
-                        id: id.clone(),
-                        name: instance_name,
-                        ..FontMaster::default()
-                    };
-                    for (axis, value) in axes.iter().zip(instance.coordinates.iter()) {
-                        let value = value.get().to_f32();
-                        face.set_variation(axis.tag, value);
-                        master.axes.insert(axis.tag.to_string(), value as f64);
-                    }
-                    project.masters.push(master);
-                    for raw_id in 0..face.number_of_glyphs() {
-                        let glyph_id = ttf_parser::GlyphId(raw_id);
-                        let Some(name) = project.glyph_order.get(raw_id as usize) else {
-                            continue;
-                        };
-                        let Some(glyph) = project.glyphs.get_mut(name) else {
-                            continue;
-                        };
-                        let mut collector = OutlineCollector::new();
-                        face.outline_glyph(glyph_id, &mut collector);
-                        if !collector.current.points.is_empty() {
-                            collector.contours.push(collector.current);
-                        }
-                        glyph.layers.insert(
-                            id.clone(),
-                            GlyphLayer {
-                                width: face.glyph_hor_advance(glyph_id).unwrap_or(0) as f64,
-                                contours: collector.contours,
-                                components: Vec::new(),
-                                anchors: Vec::new(),
-                            },
-                        );
-                    }
-                }
-            }
-        }
-        for axis in &axes {
-            face.set_variation(axis.tag, axis.def_value);
-        }
-    }
+    import_ttf_variations(&mut face, &bytes, &mut project);
     project.normalize_glyph_order();
     project.normalize_masters();
     project.preserved_layout_source = Some(project.feature_source());

@@ -48,6 +48,7 @@ include!("../io_parts/part_038.rs");
 include!("../io_parts/part_039.rs");
 include!("../io_parts/part_040.rs");
 include!("../io_parts/part_041.rs");
+include!("../io_parts/import_ttf_variations.rs");
 include!("../io_parts/part_042.rs");
 include!("../io_parts/part_043.rs");
 include!("../io_parts/part_044.rs");

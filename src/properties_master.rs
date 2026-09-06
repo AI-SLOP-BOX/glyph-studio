@@ -1,7 +1,6 @@
-#![allow(clippy::too_many_arguments)]
-
 use super::*;
 
+#[allow(clippy::too_many_arguments, clippy::ptr_arg, unused_variables)]
 pub fn show_properties_master(
     ui: &mut Ui,
     properties_filter: &mut String,
