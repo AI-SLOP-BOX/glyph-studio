@@ -6,4 +6,8 @@ mod canvas_04_decompose_named_components;
 mod canvas_context_menu;
 mod canvas_header;
 mod canvas_input;
+mod canvas_misc;
 mod canvas_scene;
+mod canvas_select;
+mod canvas_select_click;
+mod canvas_select_start;
