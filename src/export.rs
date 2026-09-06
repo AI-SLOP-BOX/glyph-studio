@@ -3979,7 +3979,7 @@ fn contour_self_intersects(contour: &crate::font_data::Contour) -> bool {
     false
 }
 
-pub(crate) fn validate_feature_glyph_references(
+pub fn validate_feature_glyph_references(
     source: &str,
     glyphs: &std::collections::HashMap<String, crate::font_data::GlyphData>,
 ) -> Vec<String> {
@@ -4076,7 +4076,7 @@ pub(crate) fn validate_feature_glyph_references(
     issues
 }
 
-pub(crate) fn validate_feature_class_definitions(
+pub fn validate_feature_class_definitions(
     source: &str,
     glyphs: &std::collections::HashMap<String, crate::font_data::GlyphData>,
 ) -> Vec<String> {
@@ -4528,7 +4528,7 @@ fn apply_lookup_mark_set<T>(
     lookup
 }
 
-pub(crate) fn extract_feature_blocks(source: &str) -> Vec<(Tag, String)> {
+pub fn extract_feature_blocks(source: &str) -> Vec<(Tag, String)> {
     // Comments may contain words such as `feature` or unmatched braces. Remove
     // them before scanning so they cannot distort the nesting depth.
     let mut uncommented = String::with_capacity(source.len());
@@ -6015,7 +6015,7 @@ fn build_simple_gsub_with_variations_and_unicode(
     write_fonts::dump_table(&table).ok()
 }
 
-pub(crate) fn expand_named_feature_classes(source: &str) -> String {
+pub fn expand_named_feature_classes(source: &str) -> String {
     let mut expanded = source.to_string();
     let definitions: Vec<(String, String)> = source
         .split(';')
@@ -8411,7 +8411,7 @@ pub fn export_all_ttf_for_masters(
     Ok(project.masters.len())
 }
 
-pub(crate) fn validate_feature_source(source: &str) -> Result<(), String> {
+pub fn validate_feature_source(source: &str) -> Result<(), String> {
     let mut code = String::with_capacity(source.len());
     let mut chars = source.chars().peekable();
     let mut in_string = false;

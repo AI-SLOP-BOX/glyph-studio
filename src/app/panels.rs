@@ -479,7 +479,7 @@ impl GlyphStudioApp {
                             .add_filter("SVG", &["svg"])
                             .pick_file()
                         {
-                            match io::load_svg(&path) {
+                            match crate::core::load_svg(&path) {
                                 Ok(mut imported) => {
                                     if let Some((name, mut glyph)) = imported.glyphs.drain().next()
                                     {
@@ -518,11 +518,11 @@ impl GlyphStudioApp {
                                 .and_then(|extension| extension.to_str())
                                 .unwrap_or_default();
                             let result = if extension.eq_ignore_ascii_case("woff2") {
-                                io::load_woff2(&path)
+                                crate::core::load_woff2(&path)
                             } else if extension.eq_ignore_ascii_case("woff") {
-                                io::load_woff(&path)
+                                crate::core::load_woff(&path)
                             } else {
-                                io::load_ttf(&path)
+                                crate::core::load_ttf(&path)
                             };
                             match result {
                                 Ok(project) => {
@@ -552,7 +552,7 @@ impl GlyphStudioApp {
                             .add_filter("Glyph Studio Project", &["json"])
                             .save_file()
                         {
-                            match io::save_project(&self.project, &path) {
+                            match crate::core::save_project(&self.project, &path) {
                                 Ok(()) => {
                                     self.status_message =
                                         format!("プロジェクトを保存しました: {}", path.display());
@@ -570,7 +570,7 @@ impl GlyphStudioApp {
                             .add_filter("Glyphs Project", &["glyphs"])
                             .save_file()
                         {
-                            match io::save_glyphs(&self.project, &path) {
+                            match crate::core::save_glyphs(&self.project, &path) {
                                 Ok(()) => {
                                     self.status_message =
                                         format!("Glyphs形式で書き出しました: {}", path.display());
@@ -582,9 +582,9 @@ impl GlyphStudioApp {
                     }
                     ui.separator();
                     if ui.button("フォントを検証").clicked() {
-                        let mut issues = crate::export::validate_project_detailed(&self.project);
+                        let mut issues = crate::core::validate_project_detailed(&self.project);
                         if self.show_interpolation_overlay {
-                            issues.extend(crate::export::validate_interpolation(
+                            issues.extend(crate::core::validate_interpolation(
                                 &self.project,
                                 &self.interpolation_from_master,
                                 &self.interpolation_to_master,
@@ -634,7 +634,7 @@ impl GlyphStudioApp {
                             .add_filter("UFO", &["ufo"])
                             .save_file()
                         {
-                            match io::save_ufo(&self.project, &path) {
+                            match crate::core::save_ufo(&self.project, &path) {
                                 Ok(()) => {
                                     self.status_message =
                                         format!("UFOを保存しました: {}", path.display());
@@ -653,7 +653,7 @@ impl GlyphStudioApp {
                             .add_filter("TrueType Font", &["ttf"])
                             .save_file()
                         {
-                            match crate::export::export_ttf(&self.project, &path) {
+                            match crate::core::export_ttf(&self.project, &path) {
                                 Ok(()) => {
                                     self.status_message =
                                         format!("TTFをエクスポートしました: {}", path.display());
@@ -673,7 +673,7 @@ impl GlyphStudioApp {
                             .add_filter("OpenType Font", &["otf"])
                             .save_file()
                         {
-                            match crate::export::export_otf(&self.project, &path) {
+                            match crate::core::export_otf(&self.project, &path) {
                                 Ok(()) => {
                                     self.status_message =
                                         format!("OTFをエクスポートしました: {}", path.display())
@@ -701,7 +701,7 @@ impl GlyphStudioApp {
                             .add_filter("OpenType Font", &["otf"])
                             .save_file()
                         {
-                            match crate::export::export_otf_for_master(
+                            match crate::core::export_otf_for_master(
                                 &self.project,
                                 &self.current_master_id,
                                 &path,
@@ -720,10 +720,8 @@ impl GlyphStudioApp {
                         .clicked()
                     {
                         if let Some(directory) = rfd::FileDialog::new().pick_folder() {
-                            match crate::export::export_all_otf_for_masters(
-                                &self.project,
-                                &directory,
-                            ) {
+                            match crate::core::export_all_otf_for_masters(&self.project, &directory)
+                            {
                                 Ok(count) => {
                                     self.status_message = format!(
                                         "{}個のマスターOTFを出力しました: {}",
@@ -741,7 +739,7 @@ impl GlyphStudioApp {
                             .add_filter("Web Open Font Format", &["woff"])
                             .save_file()
                         {
-                            match crate::export::export_woff(&self.project, &path) {
+                            match crate::core::export_woff(&self.project, &path) {
                                 Ok(()) => {
                                     self.status_message =
                                         format!("WOFFをエクスポートしました: {}", path.display())
@@ -759,7 +757,7 @@ impl GlyphStudioApp {
                             .add_filter("Web Open Font Format 2", &["woff2"])
                             .save_file()
                         {
-                            match crate::export::export_woff2(&self.project, &path) {
+                            match crate::core::export_woff2(&self.project, &path) {
                                 Ok(()) => {
                                     self.status_message =
                                         format!("WOFF2をエクスポートしました: {}", path.display())
@@ -777,7 +775,7 @@ impl GlyphStudioApp {
                             .add_filter("Web Open Font Format 2", &["woff2"])
                             .save_file()
                         {
-                            match crate::export::export_woff2_for_master(
+                            match crate::core::export_woff2_for_master(
                                 &self.project,
                                 &self.current_master_id,
                                 &path,
@@ -796,7 +794,7 @@ impl GlyphStudioApp {
                         .clicked()
                     {
                         if let Some(directory) = rfd::FileDialog::new().pick_folder() {
-                            match crate::export::export_all_woff2_for_masters(
+                            match crate::core::export_all_woff2_for_masters(
                                 &self.project,
                                 &directory,
                             ) {
@@ -820,7 +818,7 @@ impl GlyphStudioApp {
                             .add_filter("Web Open Font Format", &["woff"])
                             .save_file()
                         {
-                            match crate::export::export_woff_for_master(
+                            match crate::core::export_woff_for_master(
                                 &self.project,
                                 &self.current_master_id,
                                 &path,
@@ -839,7 +837,7 @@ impl GlyphStudioApp {
                         .clicked()
                     {
                         if let Some(directory) = rfd::FileDialog::new().pick_folder() {
-                            match crate::export::export_all_woff_for_masters(
+                            match crate::core::export_all_woff_for_masters(
                                 &self.project,
                                 &directory,
                             ) {
@@ -863,7 +861,7 @@ impl GlyphStudioApp {
                             .add_filter("TrueType Font", &["ttf"])
                             .save_file()
                         {
-                            match crate::export::export_ttf_for_master(
+                            match crate::core::export_ttf_for_master(
                                 &self.project,
                                 &self.current_master_id,
                                 &path,
@@ -887,7 +885,7 @@ impl GlyphStudioApp {
                             .add_filter("TrueType Font", &(["ttf"]))
                             .save_file()
                         {
-                            match crate::export::export_ttf_at_interpolation(
+                            match crate::core::export_ttf_at_interpolation(
                                 &self.project,
                                 &self.interpolation_from_master,
                                 &self.interpolation_to_master,
@@ -910,7 +908,7 @@ impl GlyphStudioApp {
                         .clicked()
                     {
                         if let Some(directory) = rfd::FileDialog::new().pick_folder() {
-                            match crate::export::export_interpolation_set(
+                            match crate::core::export_interpolation_set(
                                 &self.project,
                                 &self.interpolation_from_master,
                                 &self.interpolation_to_master,
@@ -946,7 +944,7 @@ impl GlyphStudioApp {
                             .map(|value| value / 100.0)
                             .collect();
                         if let Some(directory) = rfd::FileDialog::new().pick_folder() {
-                            match crate::export::export_interpolation_set(
+                            match crate::core::export_interpolation_set(
                                 &self.project,
                                 &self.interpolation_from_master,
                                 &self.interpolation_to_master,
@@ -970,10 +968,8 @@ impl GlyphStudioApp {
                         .clicked()
                     {
                         if let Some(directory) = rfd::FileDialog::new().pick_folder() {
-                            match crate::export::export_all_ttf_for_masters(
-                                &self.project,
-                                &directory,
-                            ) {
+                            match crate::core::export_all_ttf_for_masters(&self.project, &directory)
+                            {
                                 Ok(count) => {
                                     self.status_message = format!(
                                         "{}個のマスターTTFを出力しました: {}",
@@ -994,7 +990,7 @@ impl GlyphStudioApp {
                                 .add_filter("SVG", &["svg"])
                                 .save_file()
                             {
-                                match crate::export::export_svg_with_palette(
+                                match crate::core::export_svg_with_palette(
                                     &self.project,
                                     &name,
                                     self.preview_color_palette,
@@ -1012,7 +1008,7 @@ impl GlyphStudioApp {
                     }
                     if ui.add(egui::Button::new("全グリフをSVG出力...")).clicked() {
                         if let Some(directory) = rfd::FileDialog::new().pick_folder() {
-                            match crate::export::export_all_svg_with_palette(
+                            match crate::core::export_all_svg_with_palette(
                                 &self.project,
                                 self.preview_color_palette,
                                 &directory,
@@ -1034,7 +1030,7 @@ impl GlyphStudioApp {
                         .clicked()
                     {
                         if let Some(directory) = rfd::FileDialog::new().pick_folder() {
-                            match crate::export::export_all_svg_for_master_with_palette(
+                            match crate::core::export_all_svg_for_master_with_palette(
                                 &self.project,
                                 &self.current_master_id,
                                 self.preview_color_palette,
@@ -1273,11 +1269,10 @@ impl GlyphStudioApp {
                     .on_hover_text("書き出し前にフォント全体を検証")
                     .clicked()
                 {
-                    self.validation_issues =
-                        crate::export::validate_project_detailed(&self.project);
+                    self.validation_issues = crate::core::validate_project_detailed(&self.project);
                     if self.show_interpolation_overlay {
                         self.validation_issues
-                            .extend(crate::export::validate_interpolation(
+                            .extend(crate::core::validate_interpolation(
                                 &self.project,
                                 &self.interpolation_from_master,
                                 &self.interpolation_to_master,
@@ -1370,7 +1365,7 @@ impl GlyphStudioApp {
 
                 ui.menu_button("グリフ", |ui| {
                     if ui.button("日本語グリフを生成").clicked() {
-                        generator::generate_all_japanese(&mut self.project);
+                        crate::core::generate_all_japanese(&mut self.project);
                         self.current_glyph = self
                             .project
                             .glyph_names_sorted()

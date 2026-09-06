@@ -54,7 +54,7 @@ impl eframe::App for GlyphStudioApp {
                 .add_filter("UFO", &["ufo"])
                 .save_file()
             {
-                match io::save_ufo(&self.project, &path) {
+                match crate::core::save_ufo(&self.project, &path) {
                     Ok(()) => {
                         self.status_message = format!("UFOを保存しました: {}", path.display());
                     }
@@ -365,10 +365,10 @@ impl eframe::App for GlyphStudioApp {
                     });
                 });
             if rerun_validation {
-                self.validation_issues = crate::export::validate_project_detailed(&self.project);
+                self.validation_issues = crate::core::validate_project_detailed(&self.project);
                 if self.show_interpolation_overlay {
                     self.validation_issues
-                        .extend(crate::export::validate_interpolation(
+                        .extend(crate::core::validate_interpolation(
                             &self.project,
                             &self.interpolation_from_master,
                             &self.interpolation_to_master,
@@ -1651,7 +1651,7 @@ impl eframe::App for GlyphStudioApp {
                     .map(str::to_string)
                     .collect::<Vec<_>>();
                     for (tag, _) in
-                        crate::export::extract_feature_blocks(&self.project.feature_source())
+                        crate::core::extract_feature_blocks(&self.project.feature_source())
                     {
                         let tag = String::from_utf8_lossy(&tag.to_be_bytes()).to_string();
                         if !preview_feature_tags.iter().any(|item| item == &tag) {

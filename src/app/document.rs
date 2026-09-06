@@ -162,11 +162,11 @@ impl GlyphStudioApp {
                 .and_then(|extension| extension.to_str())
                 .unwrap_or_default();
             let result = if extension.eq_ignore_ascii_case("glyphs") {
-                io::save_glyphs(&self.project, &path)
+                crate::core::save_glyphs(&self.project, &path)
             } else if extension.eq_ignore_ascii_case("ufo") {
-                io::save_ufo(&self.project, &path)
+                crate::core::save_ufo(&self.project, &path)
             } else {
-                io::save_project(&self.project, &path)
+                crate::core::save_project(&self.project, &path)
             };
             match result {
                 Ok(()) => {
@@ -186,17 +186,17 @@ impl GlyphStudioApp {
             .and_then(|extension| extension.to_str())
             .unwrap_or_default();
         let loaded = if extension.eq_ignore_ascii_case("glyphs") {
-            io::load_glyphs(path)
+            crate::core::load_glyphs(path)
         } else if extension.eq_ignore_ascii_case("ufo") {
-            io::load_ufo(path)
+            crate::core::load_ufo(path)
         } else if extension.eq_ignore_ascii_case("woff2") {
-            io::load_woff2(path)
+            crate::core::load_woff2(path)
         } else if extension.eq_ignore_ascii_case("woff") {
-            io::load_woff(path)
+            crate::core::load_woff(path)
         } else if matches!(extension.to_ascii_lowercase().as_str(), "ttf" | "otf") {
-            io::load_ttf(path)
+            crate::core::load_ttf(path)
         } else {
-            io::load_project(path)
+            crate::core::load_project(path)
         }?;
         self.project = loaded;
         self.clear_canvas_selection();
@@ -315,7 +315,7 @@ impl GlyphStudioApp {
     }
 
     pub(super) fn export_ttf_file(&mut self) {
-        self.validation_issues = crate::export::validate_project_detailed(&self.project);
+        self.validation_issues = crate::core::validate_project_detailed(&self.project);
         if !self.validation_issues.is_empty() {
             self.status_message = format!(
                 "書き出しを停止しました: {}件の問題を確認してください",
@@ -327,7 +327,7 @@ impl GlyphStudioApp {
             .add_filter("TrueType Font", &["ttf"])
             .save_file()
         {
-            match crate::export::export_ttf(&self.project, &path) {
+            match crate::core::export_ttf(&self.project, &path) {
                 Ok(()) => {
                     self.status_message = format!("TTFを書き出しました: {}", path.display());
                 }
@@ -337,7 +337,7 @@ impl GlyphStudioApp {
     }
 
     pub(super) fn export_otf_file(&mut self) {
-        self.validation_issues = crate::export::validate_project_detailed(&self.project);
+        self.validation_issues = crate::core::validate_project_detailed(&self.project);
         if !self.validation_issues.is_empty() {
             self.status_message = format!(
                 "書き出しを停止しました: {}件の問題を確認してください",
@@ -349,7 +349,7 @@ impl GlyphStudioApp {
             .add_filter("OpenType Font", &["otf"])
             .save_file()
         {
-            match crate::export::export_otf(&self.project, &path) {
+            match crate::core::export_otf(&self.project, &path) {
                 Ok(()) => {
                     self.status_message = format!("OTFを書き出しました: {}", path.display());
                 }
@@ -359,7 +359,7 @@ impl GlyphStudioApp {
     }
 
     pub(super) fn export_otf_cff2_file(&mut self) {
-        self.validation_issues = crate::export::validate_project_detailed(&self.project);
+        self.validation_issues = crate::core::validate_project_detailed(&self.project);
         if !self.validation_issues.is_empty() {
             self.status_message = format!(
                 "書き出しを停止しました: {}件の問題を確認してください",
@@ -371,7 +371,7 @@ impl GlyphStudioApp {
             .add_filter("CFF2 OpenType Font", &["otf"])
             .save_file()
         {
-            match crate::export::export_otf_cff2(&self.project, &path) {
+            match crate::core::export_otf_cff2(&self.project, &path) {
                 Ok(()) => {
                     self.status_message = format!("CFF2 OTFを書き出しました: {}", path.display());
                 }
@@ -381,7 +381,7 @@ impl GlyphStudioApp {
     }
 
     pub(super) fn export_woff2_file(&mut self) {
-        self.validation_issues = crate::export::validate_project_detailed(&self.project);
+        self.validation_issues = crate::core::validate_project_detailed(&self.project);
         if !self.validation_issues.is_empty() {
             self.status_message = format!(
                 "書き出しを停止しました: {}件の問題を確認してください",
@@ -393,7 +393,7 @@ impl GlyphStudioApp {
             .add_filter("Web Open Font Format 2", &["woff2"])
             .save_file()
         {
-            match crate::export::export_woff2(&self.project, &path) {
+            match crate::core::export_woff2(&self.project, &path) {
                 Ok(()) => {
                     self.status_message = format!("WOFF2を書き出しました: {}", path.display());
                 }
@@ -403,7 +403,7 @@ impl GlyphStudioApp {
     }
 
     pub(super) fn export_woff_file(&mut self) {
-        self.validation_issues = crate::export::validate_project_detailed(&self.project);
+        self.validation_issues = crate::core::validate_project_detailed(&self.project);
         if !self.validation_issues.is_empty() {
             self.status_message = format!(
                 "書き出しを停止しました: {}件の問題を確認してください",
@@ -415,7 +415,7 @@ impl GlyphStudioApp {
             .add_filter("Web Open Font Format", &["woff"])
             .save_file()
         {
-            match crate::export::export_woff(&self.project, &path) {
+            match crate::core::export_woff(&self.project, &path) {
                 Ok(()) => {
                     self.status_message = format!("WOFFを書き出しました: {}", path.display());
                 }

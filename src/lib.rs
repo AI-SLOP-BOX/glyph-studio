@@ -14,13 +14,21 @@ pub mod tools;
 /// 外部ツールから利用する、フォント制作Coreの主要API。
 pub mod core {
     pub use crate::export::{
-        export_all_svg, export_by_extension, export_interpolation_set, export_otf, export_otf_cff2,
-        export_svg, export_ttf, export_ttf_at_interpolation, export_woff, export_woff2,
-        validate_interpolation, validate_project, validate_project_detailed, ValidationIssue,
+        expand_named_feature_classes, export_all_otf_for_masters, export_all_svg,
+        export_all_svg_for_master_with_palette, export_all_svg_with_palette,
+        export_all_ttf_for_masters, export_all_woff2_for_masters, export_all_woff_for_masters,
+        export_by_extension, export_interpolation_set, export_otf, export_otf_cff2,
+        export_otf_for_master, export_svg, export_svg_with_palette, export_ttf,
+        export_ttf_at_interpolation, export_ttf_for_master, export_woff, export_woff2,
+        export_woff2_for_master, export_woff_for_master, extract_feature_blocks,
+        validate_feature_class_definitions, validate_feature_glyph_references,
+        validate_feature_source, validate_interpolation, validate_project,
+        validate_project_detailed, ValidationIssue,
     };
     pub use crate::font_data::{
         AxisMappingPoint, FontInstance, FontProject, GlyphData, GlyphLayer,
     };
+    pub use crate::generator::generate_all_japanese;
     pub use crate::io::{
         load_glyphs, load_project, load_svg, load_ttf, load_ufo, load_woff, load_woff2,
         save_glyphs, save_project, save_ufo,

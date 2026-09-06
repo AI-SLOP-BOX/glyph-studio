@@ -639,12 +639,12 @@ pub fn show_properties(
                 }
             });
             let feature_source = project.feature_source();
-            match crate::export::validate_feature_source(&feature_source) {
+            match crate::core::validate_feature_source(&feature_source) {
                 Ok(()) => {
                     ui.colored_label(egui::Color32::from_rgb(80, 170, 105), "Feature構文: OK");
                     let mut reference_issues =
-                        crate::export::validate_feature_class_definitions(&feature_source, &project.glyphs);
-                    reference_issues.extend(crate::export::validate_feature_glyph_references(
+                        crate::core::validate_feature_class_definitions(&feature_source, &project.glyphs);
+                    reference_issues.extend(crate::core::validate_feature_glyph_references(
                         &feature_source,
                         &project.glyphs,
                     ));
@@ -699,7 +699,7 @@ pub fn show_properties(
                     project.opentype_features.push_str(lookup_template);
                 }
             });
-            let feature_blocks = crate::export::extract_feature_blocks(&project.opentype_features);
+            let feature_blocks = crate::core::extract_feature_blocks(&project.opentype_features);
             let mut feature_tags: Vec<String> = feature_blocks
                 .iter()
                 .map(|(tag, _)| String::from_utf8_lossy(&tag.to_be_bytes()).to_string())
@@ -1175,16 +1175,16 @@ pub fn show_properties(
                 );
             }
             let feature_source = project.feature_source();
-            match crate::export::validate_feature_source(&feature_source) {
+            match crate::core::validate_feature_source(&feature_source) {
                 Ok(()) => {
                     ui.colored_label(egui::Color32::from_rgb(80, 190, 100), "✓ Feature syntax OK");
-                    for issue in crate::export::validate_feature_class_definitions(
+                    for issue in crate::core::validate_feature_class_definitions(
                         &feature_source,
                         &project.glyphs,
                     ) {
                         ui.colored_label(egui::Color32::from_rgb(220, 160, 60), issue);
                     }
-                    for issue in crate::export::validate_feature_glyph_references(
+                    for issue in crate::core::validate_feature_glyph_references(
                         &feature_source,
                         &project.glyphs,
                     ) {

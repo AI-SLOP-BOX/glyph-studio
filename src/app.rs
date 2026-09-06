@@ -2,10 +2,8 @@
 
 use crate::canvas::CanvasState;
 use crate::font_data::{Contour, FontProject, GlyphComponent};
-use crate::generator;
 use crate::glyph_list;
 use crate::history::History;
-use crate::io;
 use crate::properties;
 use crate::tools::{PenState, Tool};
 use eframe::egui;
@@ -75,7 +73,7 @@ pub struct GlyphStudioApp {
     pub glyph_list_grid_view: bool,
     pub master_axis_tag_input: String,
     pub status_message: String,
-    pub validation_issues: Vec<crate::export::ValidationIssue>,
+    pub validation_issues: Vec<crate::core::ValidationIssue>,
     pub validation_glyphs_only: bool,
     pub project_path: Option<PathBuf>,
     pub pending_open_path: Option<PathBuf>,

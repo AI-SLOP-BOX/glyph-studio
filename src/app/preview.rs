@@ -106,8 +106,8 @@ pub(super) fn preview_glyph_names(
         .filter(|tag| !tag.is_empty())
         .collect();
     let feature_source = project.feature_source();
-    let expanded_features = crate::export::expand_named_feature_classes(&feature_source);
-    let rule_sources = crate::export::extract_feature_blocks(&expanded_features);
+    let expanded_features = crate::core::expand_named_feature_classes(&feature_source);
+    let rule_sources = crate::core::extract_feature_blocks(&expanded_features);
     let source = if rule_sources.is_empty() {
         expanded_features
     } else {
