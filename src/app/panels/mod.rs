@@ -21,3 +21,5 @@ mod panel_19_align_selected_components;
 mod panel_20_distribute_selected_components;
 mod panel_21_align_selection;
 mod panel_22_distribute_selection;
+mod panel_23_show_contour_operations;
+mod panel_24_show_file_menu;
