@@ -60,7 +60,8 @@ mod cli;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::cli;
+    use glyph_studio::{font_data, io};
 
     #[test]
     fn move_master_cli_reorders_and_saves_json_project() {
@@ -107,7 +108,7 @@ mod tests {
             "bold".to_string(),
             duplicate_output.display().to_string(),
         ];
-        run_cli(&duplicate_args).unwrap();
+        cli::run_cli(&duplicate_args).unwrap();
         let duplicated = io::load_project(&duplicate_output).unwrap();
         assert_eq!(duplicated.masters[1].id, "bold.copy1");
         assert_eq!(duplicated.masters[1].name, "Bold Copy");
